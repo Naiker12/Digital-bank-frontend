@@ -17,6 +17,23 @@ El proyecto se encuentra en una fase avanzada de diseño y prototipado funcional
 
 ---
 
+## 📸 Galería (Screenshots)
+
+A continuación, una vista previa de la interfaz actual:
+
+### Autenticación
+![Login](./public/img/login.png)
+![Registro](./public/img/register.png)
+
+### Dashboard y Gestión
+![Panel Principal](./public/img/panel.png)
+![Tarjetas](./public/img/tarjetas.png)
+
+### Servicios y Pagos
+![Catálogo de Servicios](./public/img/service.png)
+
+---
+
 ##  Stack Tecnológico
 
 Hemos seleccionado las tecnologías más modernas y estables del mercado para garantizar escalabilidad:

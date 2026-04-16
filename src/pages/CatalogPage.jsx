@@ -306,22 +306,22 @@ export default function CatalogPage() {
   return (
     <div className="space-y-6 pb-10 font-sans">
       {/* Cabecera Limpia (Shadcn Style) */}
-      <div className="flex flex-col gap-1 px-1">
-        <h1 className="text-3xl font-bold tracking-tight">Servicios y Pagos</h1>
-        <p className="text-muted-foreground text-sm">
+      <div className="flex flex-col gap-1 px-2 md:px-0">
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Servicios y Pagos</h1>
+        <p className="text-muted-foreground text-sm md:text-base">
           Gestiona y paga tus facturas de servicios públicos de forma centralizada.
         </p>
       </div>
 
       {/* Barra de Filtros y Búsqueda */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-1 overflow-hidden">
-        <Tabs defaultValue="all" value={category} onValueChange={handleCategoryChange} className="w-full md:w-auto max-w-full">
-          <TabsList className="bg-muted/50 p-1 h-11 w-full flex overflow-x-auto justify-start no-scrollbar">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-2 md:px-0">
+        <Tabs defaultValue="all" value={category} onValueChange={handleCategoryChange} className="w-full md:w-auto">
+          <TabsList className="bg-muted/50 p-1 h-12 w-full flex overflow-x-auto justify-start scrollbar-hide flex-nowrap border border-border/50">
             {categories.map((cat) => (
               <TabsTrigger 
                 key={cat} 
                 value={cat}
-                className="rounded-lg px-4 text-xs font-semibold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm whitespace-nowrap"
+                className="rounded-lg px-5 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm whitespace-nowrap transition-all"
               >
                 {cat === 'all' ? 'Todos' : cat}
               </TabsTrigger>
@@ -329,23 +329,78 @@ export default function CatalogPage() {
           </TabsList>
         </Tabs>
 
-        <div className="relative w-full max-w-xs group">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+        <div className="relative w-full md:max-w-xs group">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="Buscar por nombre o proveedor..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="h-11 pl-10 rounded-xl bg-background border-border focus-visible:ring-primary"
+            className="h-12 pl-11 rounded-xl bg-background border-border/80 focus-visible:ring-primary shadow-sm"
           />
         </div>
       </div>
 
       <Separator className="opacity-50" />
 
-      {/* Tabla */}
-      <Card className="border-none shadow-sm overflow-hidden w-full max-w-full">
+      {/* Contenedor de Servicios */}
+      <Card className="border-none shadow-sm overflow-hidden w-full max-w-full bg-transparent md:bg-card">
         <CardContent className="p-0">
-          <div className="overflow-x-auto w-full">
+          
+          {/* Vista Móvil (Tarjetas) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden py-4 px-2">
+            {paginatedItems.map((s) => (
+              <div key={s.id} className="flex flex-col gap-4 rounded-2xl border border-border/60 p-5 shadow-sm bg-card hover:border-primary/30 transition-all">
+                <div className="flex justify-between items-start">
+                  <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-wider border-none px-2.5">
+                    {s.categoria}
+                  </Badge>
+                  <div className="text-right">
+                    <p className="font-black text-xl text-slate-900 dark:text-white leading-none">
+                      {s.precio_mensual.toFixed(2)}
+                    </p>
+                    <span className="text-[10px] font-bold opacity-30 tracking-widest uppercase">us$ / mes</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <h3 className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100">{s.proveedor}</h3>
+                  <p className="text-muted-foreground text-sm font-medium">{s.servicio}</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                  <p className="text-[11px] font-semibold opacity-50 uppercase tracking-wider">Plan {s.plan}</p>
+                </div>
+
+                <div className="flex items-center justify-between mt-2 pt-4 border-t border-border/40">
+                  <Badge
+                    className={cn(
+                      "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider border-none shadow-none",
+                      s.estado === 'Activo' ? "bg-emerald-500/10 text-emerald-600" : "bg-slate-500/10 text-slate-500"
+                    )}
+                  >
+                    {s.estado}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    className="rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-primary/10 px-4 h-9"
+                    disabled={s.estado !== 'Activo'}
+                    onClick={() => setSelected(s)}
+                  >
+                    Pagar Factura
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground font-medium sm:col-span-2 bg-card rounded-2xl border border-dashed">
+                No se encontraron servicios que coincidan con tu búsqueda
+              </div>
+            )}
+          </div>
+
+          {/* Vista Escritorio (Tabla) */}
+          <div className="hidden md:block overflow-x-auto w-full">
             <Table className="min-w-[800px]">
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-muted hover:bg-transparent">
@@ -369,7 +424,7 @@ export default function CatalogPage() {
                     </TableCell>
                     <TableCell className="font-semibold tracking-tight text-slate-900 dark:text-slate-100">{s.proveedor}</TableCell>
                     <TableCell className="text-muted-foreground text-xs font-medium">{s.servicio}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-[10px] font-semibold italic opacity-40 uppercase tracking-tight">
+                    <TableCell className="hidden lg:table-cell text-[10px] font-semibold opacity-40 uppercase tracking-tight">
                       {s.plan}
                     </TableCell>
                     <TableCell className="font-bold text-slate-900 dark:text-white">
