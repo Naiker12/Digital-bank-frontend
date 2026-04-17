@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,31 +11,37 @@ import {
   FieldGroup,
   FieldLabel,
 } from '@/components/ui/field';
-import { Landmark, Loader2 } from 'lucide-react';
+import { Landmark, Loader2, Info } from 'lucide-react';
 
 export function LoginForm({ className, ...props }) {
-  const [email, setEmail] = useState('naiker@digitalbank.com');
-  const [password, setPassword] = useState('1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (location.state?.message) {
+      setInfo(location.state.message);
+    }
+  }, [location]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setInfo('');
     setLoading(true);
 
-    // Simular retraso de red
-    setTimeout(() => {
-      const result = login(email, password);
+      const result = await login(email, password);
       if (result.success) {
         navigate('/dashboard');
       } else {
         setError(result.message);
       }
       setLoading(false);
-    }, 800);
   };
 
   return (
@@ -55,6 +61,13 @@ export function LoginForm({ className, ...props }) {
                   Ingresa a tu cuenta para continuar
                 </p>
               </div>
+
+              {info && (
+                <div className="rounded-md bg-primary/10 p-3 text-sm text-primary flex items-center gap-2">
+                  <Info className="h-4 w-4" />
+                  {info}
+                </div>
+              )}
 
               {error && (
                 <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

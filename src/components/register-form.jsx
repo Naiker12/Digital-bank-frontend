@@ -32,7 +32,7 @@ export function RegisterForm({ className, ...props }) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -42,16 +42,15 @@ export function RegisterForm({ className, ...props }) {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      const { confirmPassword, ...userData } = form;
-      const result = register(userData);
-      if (result.success) {
-        navigate('/dashboard');
-      } else {
-        setError(result.message);
-      }
-      setLoading(false);
-    }, 800);
+    const { confirmPassword, ...userData } = form;
+    const result = await register(userData);
+    if (result.success) {
+      // Como el registro no inicia sesión automáticamente, vamos al login
+      navigate('/login', { state: { message: 'Cuenta creada con éxito. Ingresa tus credenciales.' } });
+    } else {
+      setError(result.message);
+    }
+    setLoading(false);
   };
 
   return (
