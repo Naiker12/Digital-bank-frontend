@@ -11,11 +11,14 @@ export const useAuthStore = create(
       login: async (email, password) => {
         const result = await authService.login(email, password);
         if (result.success) {
-          // Ajustamos para que coincida con el contrato del backend real
+          // La respuesta de la Lambda puede usar distintos nombres de campo
+          const data = result.data;
           const userData = {
-            ...result.data.user,
-            uuid: result.data.user_id,
-            token: result.data.access_token
+            name: data.user?.name || data.name,
+            lastName: data.user?.lastName || data.lastName,
+            email: data.user?.email || data.email || email,
+            uuid: data.user_id || data.user?.uuid || data.uuid,
+            token: data.access_token || data.token,
           };
           set({ user: userData, isAuthenticated: true });
           return { success: true };
