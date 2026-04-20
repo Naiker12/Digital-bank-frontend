@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
-import { paymentApi, cardApi } from '@/api/apiClient';
+import { catalogService } from '@/services/catalogService';
+import { cardService } from '@/services/cardService';
+import { paymentService } from '@/services/paymentService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -48,33 +50,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// ─── UTILIDAD: Normalizar un item del catálogo (CSV → camelCase) ────────
-function normalizeCatalogItem(raw) {
-  return {
-    id: raw.ID || raw.id,
-    categoria: raw.Categoria || raw.categoria,
-    proveedor: raw.Proveedor || raw.proveedor,
-    servicio: raw.Servicio || raw.servicio,
-    plan: raw.Plan || raw.plan,
-    precio_mensual: parseFloat(raw['Precio Mensual (US$)'] || raw.PrecioMensual || raw.precio_mensual || 0),
-    detalles: raw['Velocidad/Detalles'] || raw.VelocidadDetalles || raw.detalles || '',
-    estado: raw.Estado || raw.estado || 'Activo',
-  };
-}
-
-// ─── UTILIDAD: Denormalizar para enviar al backend (camelCase → CSV) ─────
-function denormalizeCatalogItem(item) {
-  return {
-    ID: String(item.id),
-    Categoria: item.categoria,
-    Proveedor: item.proveedor,
-    Servicio: item.servicio,
-    Plan: item.plan,
-    'Precio Mensual (US$)': String(item.precio_mensual),
-    'Velocidad/Detalles': item.detalles,
-    Estado: item.estado,
-  };
-}
+// ─── UTILIDAD: Normalizar un item del catálogo ────────
+// La función normalizeCatalogItem ha sido movida a '@/services/catalogService'
 
 // ─── INSIGNIA DE ESTADO ───────────────────────────────
 const STATUS_CONFIG = {
@@ -87,55 +64,76 @@ const STATUS_CONFIG = {
 // ─── SEGUIMIENTO DE PAGO ─────────────────────────────
 function PaymentTracker({ status, error, service, onReset }) {
   const steps = [
-    { id: 'INITIAL', label: 'Validando Datos', progress: 33 },
-    { id: 'IN_PROGRESS', label: 'Procesando en Red', progress: 66 },
-    { id: 'FINISH', label: 'Completado', progress: 100 }
+    { id: 'INITIAL', label: 'Iniciando Pago', progress: 33 },
+    { id: 'IN_PROGRESS', label: 'Procesando Transacción', progress: 66 },
+    { id: 'FINISH', label: '¡Pago Exitoso!', progress: 100 }
   ];
 
-  const currentStep = steps.find(s => s.id === status) || steps[0];
+  const currentStep = steps.find(s => s.id === status) || 
+                     (status === 'FAILED' ? steps[1] : steps[0]);
   const progress = status === 'FAILED' ? 100 : currentStep.progress;
 
   return (
     <div className="space-y-6 p-2 py-6">
       <div className="flex flex-col items-center justify-center text-center space-y-2">
         <div className={cn(
-          "h-16 w-16 rounded-full flex items-center justify-center mb-2 animate-in zoom-in duration-500",
-          status === 'FINISH' ? "bg-emerald-500/20 text-emerald-500" :
-            status === 'FAILED' ? "bg-red-500/20 text-red-500" : "bg-primary/20 text-primary"
+          "h-16 w-16 rounded-full flex items-center justify-center mb-2 animate-in zoom-in duration-500 shadow-lg",
+          status === 'FINISH' ? "bg-emerald-500/20 text-emerald-500 ring-2 ring-emerald-500/20" :
+            status === 'FAILED' ? "bg-rose-500/20 text-rose-500 ring-2 ring-rose-500/20" : 
+            "bg-primary/20 text-primary ring-2 ring-primary/20"
         )}>
           {status === 'FINISH' ? <CheckCircle2 className="h-8 w-8" /> :
             status === 'FAILED' ? <XCircle className="h-8 w-8" /> :
               <Loader2 className="h-8 w-8 animate-spin" />}
         </div>
-        <h3 className="text-xl font-bold tracking-tight">
-          {status === 'FINISH' ? "¡Pago Exitoso!" :
-            status === 'FAILED' ? "Pago Fallido" : "Procesando Transacción"}
+        <h3 className="text-xl font-extrabold tracking-tight">
+          {status === 'FINISH' ? "¡Transacción Confirmada!" :
+            status === 'FAILED' ? "Hubo un problema" : "Operación en Curso"}
         </h3>
-        <p className="text-sm text-muted-foreground max-w-[280px]">
-          {status === 'INITIAL' && "Estamos validando tu tarjeta y saldo disponible..."}
-          {status === 'IN_PROGRESS' && "Comunicando con el procesador de pagos bancario..."}
-          {status === 'FINISH' && `El pago de ${service.precio_mensual} US$ a ${service.proveedor} se ha realizado correctamente.`}
-          {status === 'FAILED' && (error || "No se pudo completar el pago. Revisa tu saldo e intenta nuevamente.")}
+        <p className="text-sm text-muted-foreground max-w-[300px] leading-relaxed">
+          {status === 'INITIAL' && "Iniciando proceso de pago seguro..."}
+          {status === 'IN_PROGRESS' && "Validando fondos y confirmando la transacción con el banco..."}
+          {status === 'FINISH' && `Pago a ${service.proveedor} completado con éxito. Se ha generado su comprobante.`}
+          {status === 'FAILED' && (error || "La transacción no pudo completarse. Por favor, verifique su saldo o intente más tarde.")}
         </p>
       </div>
 
-      <div className="space-y-3 px-4">
+      <div className="space-y-4 px-4 pt-4">
         <Progress
           value={progress}
-          className={cn("h-2 transition-all duration-700", status === 'FAILED' ? "bg-red-200" : "bg-primary/10")}
+          className={cn("h-1.5 transition-all duration-1000", status === 'FAILED' ? "bg-rose-100" : "bg-primary/10")}
         />
-        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-          <span className={status === 'INITIAL' || status === 'IN_PROGRESS' || status === 'FINISH' ? "text-primary transition-colors" : ""}>Validación</span>
-          <span className={status === 'IN_PROGRESS' || status === 'FINISH' ? "text-primary transition-colors" : ""}>Procesamiento</span>
-          <span className={status === 'FINISH' ? "text-primary transition-colors" : ""}>Finalización</span>
+        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">
+          <span className={status === 'INITIAL' || status === 'IN_PROGRESS' || status === 'FINISH' ? "text-primary/70" : ""}>Inicio</span>
+          <span className={status === 'IN_PROGRESS' || status === 'FINISH' ? "text-primary/70" : ""}>Procesando</span>
+          <span className={status === 'FINISH' ? "text-primary/70" : ""}>Finalizado</span>
         </div>
       </div>
 
-      {(status === 'FINISH' || status === 'FAILED') && (
-        <div className="pt-2">
-          <Button className="w-full rounded-xl py-6 font-bold" onClick={onReset}>
-            Entendido
+      {(status === 'FINISH' || status === 'FAILED') ? (
+        <div className="pt-4">
+          <Button 
+            className={cn(
+              "w-full rounded-xl py-6 font-bold uppercase tracking-widest text-xs",
+              status === 'FAILED' ? "bg-rose-500 hover:bg-rose-600" : ""
+            )} 
+            onClick={onReset}
+          >
+            Regresar al Catálogo
           </Button>
+        </div>
+      ) : (
+        <div className="pt-4 flex flex-col gap-3">
+          <Button 
+            variant="outline"
+            className="w-full rounded-xl py-6 font-bold uppercase tracking-widest text-xs border-dashed"
+            onClick={onReset}
+          >
+            Cancelar y Reintentar
+          </Button>
+          <p className="text-[10px] text-center text-muted-foreground animate-pulse">
+            Si la operación tarda más de 30s, puedes cancelar y reintentar.
+          </p>
         </div>
       )}
     </div>
@@ -155,48 +153,35 @@ function PaymentModal({ service, open, onClose }) {
   // Cargar tarjetas del usuario desde la API real
   useEffect(() => {
     if (!open || !user?.uuid) return;
-    setLoadingCards(true);
-    cardApi.get(`/card/${user.uuid}`)
-      .then(res => {
-        // La API puede devolver un body string (API Gateway proxy)
-        let data = res.data;
-        if (typeof data === 'string') data = JSON.parse(data);
-        if (typeof data?.body === 'string') data = JSON.parse(data.body);
-        // Filtrar tarjetas activas
-        const activeCards = (Array.isArray(data) ? data : [data])
-          .filter(c => c.status === 'ACTIVATED' || c.status === 'ACTIVE');
-        setCards(activeCards);
-      })
-      .catch(() => {
-        setCards([]);
-      })
-      .finally(() => setLoadingCards(false));
+    const fetchCards = async () => {
+      setLoadingCards(true);
+      const result = await cardService.getUserCards(user.uuid);
+      if (result.success) {
+        setCards(result.data.filter(c => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(c.status) || !c.status));
+      }
+      setLoadingCards(false);
+    };
+    fetchCards();
   }, [open, user?.uuid]);
 
   // Polling del estado del pago
   useEffect(() => {
     if (!traceId) return;
     const interval = setInterval(async () => {
-      try {
-        const res = await paymentApi.get(`/payment/status/${traceId}`);
-        let data = res.data;
-        if (typeof data === 'string') data = JSON.parse(data);
-        if (typeof data?.body === 'string') data = JSON.parse(data.body);
-
-        const status = data.status;
+      const result = await paymentService.getPaymentStatus(traceId);
+      if (result.success) {
+        const { status, error: apiError } = result;
         setPaymentStatus(status);
-        if (data.error) setPaymentError(data.error);
+        if (apiError) setPaymentError(apiError);
 
         if (status === 'FINISH' || status === 'FAILED') {
           clearInterval(interval);
           if (status === 'FINISH') {
             toast.success(`Pago a ${service.proveedor} completado`);
           } else {
-            toast.error(data.error || 'Pago fallido');
+            toast.error(apiError || 'Pago fallido');
           }
         }
-      } catch (err) {
-        // Seguir intentando
       }
     }, 3000);
 
@@ -208,34 +193,23 @@ function PaymentModal({ service, open, onClose }) {
     setPaymentStatus('INITIAL');
     setPaymentError(null);
 
-    try {
-      const payload = {
-        cardId: selectedCard,
-        service: denormalizeCatalogItem(service),
-      };
-      const res = await paymentApi.post('/payment', payload);
-      let data = res.data;
-      if (typeof data === 'string') data = JSON.parse(data);
-      if (typeof data?.body === 'string') data = JSON.parse(data.body);
+    const result = await paymentService.initiatePayment({
+      cardId: selectedCard,
+      service: service,
+      userId: user?.uuid,
+    });
 
-      if (data.error) {
-        setPaymentStatus('FAILED');
-        setPaymentError(data.error);
-        toast.error(data.error);
-        return;
-      }
-
-      setTraceId(data.traceId);
-    } catch (err) {
+    if (result.success) {
+      setTraceId(result.traceId);
+    } else {
       setPaymentStatus('FAILED');
-      const msg = err.response?.data?.error || 'Error al iniciar el pago';
-      setPaymentError(msg);
-      toast.error(msg);
+      setPaymentError(result.message);
+      toast.error(result.message);
     }
   };
 
   const handleClose = () => {
-    if (paymentStatus === 'INITIAL' || paymentStatus === 'IN_PROGRESS') return;
+    // Si el usuario presiona cerrar o cancelar, reseteamos todo para detener el polling
     setPaymentStatus(null);
     setPaymentError(null);
     setSelectedCard(null);
@@ -302,20 +276,22 @@ function PaymentModal({ service, open, onClose }) {
                   <div className="space-y-3">
                     {cards.map((card) => (
                       <button
-                        key={card.uuid}
+                        key={card.id}
                         type="button"
-                        onClick={() => setSelectedCard(card.uuid)}
+                        disabled={card.status === 'PENDING'}
+                        onClick={() => setSelectedCard(card.id)}
                         className={cn(
                           "flex w-full items-center justify-between rounded-xl border p-4 transition-all",
-                          selectedCard === card.uuid
+                          card.status === 'PENDING' ? "opacity-60 cursor-not-allowed" : "hover:bg-slate-50",
+                          selectedCard === card.id
                             ? "border-primary bg-primary/[0.04] ring-1 ring-primary"
-                            : "border-slate-100 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
+                            : "border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900"
                         )}
                       >
                         <div className="flex items-center gap-4 text-left">
                           <div className={cn(
                             "h-10 w-14 rounded-lg flex items-center justify-center transition-all",
-                            selectedCard === card.uuid ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400 dark:bg-slate-800"
+                            selectedCard === card.id ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400 dark:bg-slate-800"
                           )}>
                             <CreditCard className="h-5 w-5" />
                           </div>
@@ -323,17 +299,31 @@ function PaymentModal({ service, open, onClose }) {
                             <p className="text-sm font-bold">
                               {card.type} <span className="font-medium text-muted-foreground">•••• {formatCardNumber(card.cardNumber)}</span>
                             </p>
-                            <p className="text-[10px] text-muted-foreground font-medium">
-                              Disponible: <span className="font-bold text-foreground">${parseFloat(card.balance || 0).toLocaleString()}</span>
-                            </p>
+                            {card.status === 'PENDING' ? (
+                              <div className="mt-1 flex items-center gap-2">
+                                <div className="h-1.5 w-16 bg-slate-200 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-amber-500 transition-all" 
+                                    style={{ width: `${(card.purchaseCount / 10) * 100}%` }} 
+                                  />
+                                </div>
+                                <p className="text-[9px] text-amber-600 font-bold uppercase">
+                                  {card.purchaseCount}/10 para activar
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-muted-foreground font-medium">
+                                Disponible: <span className="font-bold text-foreground">${parseFloat(card.balance || 0).toLocaleString()}</span>
+                              </p>
+                            )}
                           </div>
                         </div>
 
                         <div className={cn(
                           "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
-                          selectedCard === card.uuid ? "border-primary bg-primary" : "border-slate-200"
+                          selectedCard === card.id ? "border-primary bg-primary" : "border-slate-200"
                         )}>
-                          {selectedCard === card.uuid && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                          {selectedCard === card.id && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                         </div>
                       </button>
                     ))}
@@ -379,30 +369,26 @@ export default function CatalogPage() {
 
   // Cargar catálogo desde la API real
   useEffect(() => {
-    setLoading(true);
-    paymentApi.get('/catalog')
-      .then(res => {
-        let data = res.data;
-        // Manejar respuesta con body como string (API Gateway proxy)
-        if (typeof data === 'string') data = JSON.parse(data);
-        if (typeof data?.body === 'string') data = JSON.parse(data.body);
-        const items = Array.isArray(data) ? data : [];
-        setCatalog(items.map(normalizeCatalogItem));
-      })
-      .catch(err => {
-        console.error('Error al cargar catálogo:', err);
-        toast.error('No se pudo cargar el catálogo de servicios');
+    const fetchCatalog = async () => {
+      setLoading(true);
+      const result = await catalogService.getCatalog();
+      if (result.success) {
+        setCatalog(result.data);
+      } else {
+        toast.error(result.message);
         setCatalog([]);
-      })
-      .finally(() => setLoading(false));
+      }
+      setLoading(false);
+    };
+    fetchCatalog();
   }, []);
 
   const categories = ['all', ...new Set(catalog.map(s => s.categoria))];
 
   const filtered = catalog.filter((s) => {
     const matchesSearch = 
-      s.servicio.toLowerCase().includes(search.toLowerCase()) ||
-      s.proveedor.toLowerCase().includes(search.toLowerCase());
+      (s.servicio?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
+      (s.proveedor?.toLowerCase() ?? "").includes(search.toLowerCase());
     
     const matchesCategory = category === 'all' || s.categoria === category;
 

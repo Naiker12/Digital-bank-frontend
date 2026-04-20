@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
-import { MOCK_CARDS } from '@/data/mockData';
+import { cardService } from '@/services/cardService';
 import {
   Card,
   CardContent,
@@ -184,8 +184,41 @@ function PayCardDialog({ card, open, onClose }) {
 // ─── PÁGINA DE TARJETAS ────────────────────────────────
 export default function CardsPage() {
   const user = useAuthStore((s) => s.user);
-  const cards = MOCK_CARDS.filter((c) => c.user_id === user?.uuid);
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [payCard, setPayCard] = useState(null);
+
+  // Cargar tarjetas reales del usuario desde el microservicio
+  useEffect(() => {
+    if (!user?.uuid) return;
+    
+    const fetchCards = async () => {
+      try {
+        setLoading(true);
+        const result = await cardService.getUserCards(user.uuid);
+        if (result.success) {
+          const activeCards = result.data
+            .filter(c => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(c.status) || !c.status)
+            .map(c => ({
+              ...c,
+              holder: `${user.name} ${user.lastName}`,
+              last4: (c.cardNumber || '').slice(-4),
+              number: c.cardNumber || '****'
+            }));
+          setCards(activeCards);
+        } else {
+          toast.error(result.message);
+        }
+      } catch (err) {
+        console.error('Error fetching cards:', err);
+        toast.error('No se pudieron cargar tus tarjetas');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCards();
+  }, [user?.uuid, user?.name, user?.lastName]);
 
   return (
     <div className="space-y-8 pb-10">

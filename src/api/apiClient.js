@@ -33,10 +33,11 @@ const createInstance = (baseURL) => {
   return instance;
 };
 
-// Instancias para los diferentes microservicios
-export const userApi = createInstance(import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:8000');
-export const cardApi = createInstance(import.meta.env.VITE_CARD_SERVICE_URL || 'http://localhost:8001');
-export const paymentApi = createInstance(import.meta.env.VITE_PAYMENT_SERVICE_URL || 'http://localhost:8002');
+// Instancias para los diferentes microservicios (Configurados vía Variables de Entorno)
+export const userApi = createInstance(import.meta.env.VITE_USER_SERVICE_URL);
+export const cardApi = createInstance(import.meta.env.VITE_CARD_SERVICE_URL);
+export const paymentApi = createInstance(import.meta.env.VITE_PAYMENT_SERVICE_URL);
+export const catalogApi = createInstance(import.meta.env.VITE_CATALOG_SERVICE_URL);
 
 // Exportación por defecto (User Service por compatibilidad)
 export default userApi;
