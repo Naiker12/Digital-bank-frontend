@@ -7,6 +7,7 @@ import RegisterPage from '@/pages/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
 import CardsPage from '@/pages/CardsPage';
 import CatalogPage from '@/pages/CatalogPage';
+import TransactionsPage from '@/pages/TransactionsPage';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function App() {
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/cards" element={<CardsPage />} />
           <Route path="/catalog" element={<CatalogPage />} />
+          <Route path="/transactions" element={<TransactionsPage />} />
         </Route>
 
         {/* Ruta por defecto */}

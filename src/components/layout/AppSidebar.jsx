@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { LayoutDashboard, CreditCard, Banknote, Landmark, LogOut, User } from "lucide-react"
+import { LayoutDashboard, CreditCard, Banknote, Landmark, LogOut, User, Receipt } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useAuthStore } from "@/store/authStore"
 
@@ -42,6 +42,11 @@ const navItems = [
     title: "Pagar Servicios",
     url: "/catalog",
     icon: Banknote,
+  },
+  {
+    title: "Movimientos",
+    url: "/transactions",
+    icon: Receipt,
   },
 ]
 

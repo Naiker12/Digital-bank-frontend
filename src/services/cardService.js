@@ -58,6 +58,40 @@ export function normalizeTransaction(transaction, cardId) {
   };
 }
 
+/**
+ * Calcula el número total de compras (PURCHASE) realizadas con tarjetas
+ * de débito del usuario. Se usa para mostrar el progreso X/10 de
+ * activación de la tarjeta de crédito.
+ *
+ * Reutiliza getUserCards + getCardReport sin modificar ningún backend.
+ */
+async function getDebitPurchaseCount(userUuid) {
+  try {
+    const cardsResult = await cardService.getUserCards(userUuid);
+    if (!cardsResult.success) return 0;
+
+    const debitCards = cardsResult.data.filter(
+      (card) => card.type === 'DEBIT'
+    );
+
+    if (debitCards.length === 0) return 0;
+
+    const reports = await Promise.all(
+      debitCards.map((card) => cardService.getCardReport(card.uuid || card.id))
+    );
+
+    return reports
+      .filter((report) => report.success)
+      .flatMap((report) => report.data.transactions || [])
+      .filter((tx) => tx.type === 'PURCHASE')
+      .length;
+  } catch {
+    return 0;
+  }
+}
+
+export { getDebitPurchaseCount };
+
 export const cardService = {
   /**
    * Obtiene la billetera del usuario (todas sus tarjetas)

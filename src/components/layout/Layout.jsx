@@ -19,6 +19,7 @@ const PATH_NAMES = {
   '/dashboard': 'Inicio',
   '/cards': 'Mis Tarjetas',
   '/catalog': 'Pagar Servicios',
+  '/transactions': 'Movimientos',
 };
 
 export default function Layout() {

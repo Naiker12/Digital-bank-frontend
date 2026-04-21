@@ -1,34 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
-import { cn } from '@/lib/utils';
-import { cardService } from '@/services/cardService';
+import { cardService, getDebitPurchaseCount } from '@/services/cardService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Wallet,
   TrendingUp,
   TrendingDown,
   CreditCard,
-  ArrowUpRight,
-  ArrowDownRight,
   Loader2,
 } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+
+/* ── Componentes extraídos ──── */
+import StatsGrid from '@/components/transactions/StatsGrid';
+import TransactionItem from '@/components/transactions/TransactionItem';
+import CreditActivationAlert from '@/components/dashboard/CreditActivationAlert';
+import MonthlyChart from '@/components/dashboard/MonthlyChart';
 
 const CURRENT_YEAR = 2026;
 const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const MAX_RECENT_TRANSACTIONS = 5;
 
 const createEmptyChart = () => MONTH_LABELS.map((name) => ({ name, ingresos: 0, gastos: 0 }));
-
 const formatMoney = (value) => `${Number(value || 0).toFixed(2)} US$`;
 
 export default function DashboardPage() {
@@ -39,7 +33,14 @@ export default function DashboardPage() {
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [purchaseCount, setPurchaseCount] = useState(0);
 
+  const pendingCreditCard = useMemo(
+    () => cards.find((card) => card.type === 'CREDIT' && card.status === 'PENDING'),
+    [cards]
+  );
+
+  /* ── Carga de datos ──── */
   useEffect(() => {
     if (!user?.uuid) return;
 
@@ -57,10 +58,14 @@ export default function DashboardPage() {
         return;
       }
 
-      const activeCards = result.data.filter((card) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(card.status) || !card.status);
+      const activeCards = result.data.filter(
+        (card) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(card.status) || !card.status
+      );
       setCards(activeCards);
 
-      const reports = await Promise.all(activeCards.map((card) => cardService.getCardReport(card.uuid || card.id)));
+      const reports = await Promise.all(
+        activeCards.map((card) => cardService.getCardReport(card.uuid || card.id))
+      );
       const transactions = reports
         .filter((report) => report.success)
         .flatMap((report) => report.data.transactions || [])
@@ -70,38 +75,43 @@ export default function DashboardPage() {
       let nextMonthlyIncome = 0;
       let nextMonthlyExpenses = 0;
 
-      transactions.forEach((transaction) => {
-        if (!transaction.rawDate || transaction.year !== CURRENT_YEAR) {
-          return;
-        }
+      transactions.forEach((tx) => {
+        if (!tx.rawDate || tx.year !== CURRENT_YEAR) return;
 
-        const monthIndex = transaction.rawDate.getMonth();
-        if (transaction.isIncome) {
-          nextChart[monthIndex].ingresos += transaction.amount;
-          nextMonthlyIncome += transaction.rawDate.getMonth() === new Date().getMonth() ? transaction.amount : 0;
-        }
+        const monthIndex = tx.rawDate.getMonth();
+        const isCurrentMonth = tx.rawDate.getMonth() === new Date().getMonth();
 
-        if (transaction.isExpense) {
-          nextChart[monthIndex].gastos += transaction.amount;
-          nextMonthlyExpenses += transaction.rawDate.getMonth() === new Date().getMonth() ? transaction.amount : 0;
+        if (tx.isIncome) {
+          nextChart[monthIndex].ingresos += tx.amount;
+          if (isCurrentMonth) nextMonthlyIncome += tx.amount;
+        }
+        if (tx.isExpense) {
+          nextChart[monthIndex].gastos += tx.amount;
+          if (isCurrentMonth) nextMonthlyExpenses += tx.amount;
         }
       });
 
       setChartData(nextChart);
       setMonthlyIncome(nextMonthlyIncome);
       setMonthlyExpenses(nextMonthlyExpenses);
-      setRecentTx(transactions.slice(0, 6));
+      setRecentTx(transactions.slice(0, MAX_RECENT_TRANSACTIONS));
       setLoading(false);
     };
 
     fetchData();
   }, [user?.uuid]);
 
+  useEffect(() => {
+    if (!pendingCreditCard || !user?.uuid) return;
+    getDebitPurchaseCount(user.uuid).then(setPurchaseCount);
+  }, [pendingCreditCard, user?.uuid]);
+
   const totalBalance = useMemo(
     () => cards.reduce((sum, card) => sum + parseFloat(card.balance || 0), 0),
     [cards]
   );
 
+  /* ── Definición de stats ──── */
   const stats = [
     {
       title: 'Disponible',
@@ -139,6 +149,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 pb-10">
+      {/* ── Header ─── */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-mesh-pattern opacity-20" />
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
@@ -171,97 +182,30 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <Card key={stat.title} className="group overflow-hidden border-none shadow-sm transition-all hover:-translate-y-[2px] hover:shadow-md">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{stat.title}</CardTitle>
-                  <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg transition-colors group-hover:bg-opacity-20', stat.bg, stat.color)}>
-                    <stat.icon className="h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className={cn('text-2xl font-bold tracking-tight', stat.color)}>
-                    {stat.value}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {stat.desc}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <StatsGrid stats={stats} />
+
+          {pendingCreditCard && (
+            <CreditActivationAlert purchaseCount={purchaseCount} />
+          )}
 
           <div className="grid gap-6 lg:grid-cols-7">
-            <Card className="min-w-0 overflow-hidden border-none shadow-sm lg:col-span-4">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">Flujo Mensual</CardTitle>
-                  <p className="text-xs text-muted-foreground">Ingresos y gastos de tus tarjetas</p>
-                </div>
-                <Badge variant="outline" className="font-mono">{CURRENT_YEAR}</Badge>
-              </CardHeader>
-              <CardContent className="min-w-0">
-                <div className="h-[350px] min-w-0 w-full pt-4">
-                  <ResponsiveContainer width="100%" height={320} minWidth={0}>
-                    <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.18} />
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
-                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.5} vertical={false} />
-                      <XAxis dataKey="name" stroke="#888" fontSize={11} tickLine={false} axisLine={false} dy={10} />
-                      <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px' }}
-                        formatter={(value, name) => [`$${Number(value || 0).toFixed(2)}`, name === 'ingresos' ? 'Ingresos' : 'Gastos']}
-                      />
-                      <Area type="monotone" dataKey="ingresos" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorIngresos)" />
-                      <Area type="monotone" dataKey="gastos" stroke="#ef4444" strokeWidth={2.5} fillOpacity={1} fill="url(#colorGastos)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+            <MonthlyChart data={chartData} />
 
+            {/* ── Movimientos recientes ─── */}
             <Card className="border-none shadow-sm lg:col-span-3">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-lg">Movimientos</CardTitle>
                   <p className="text-xs text-muted-foreground">Actividad reciente</p>
                 </div>
-                <Button variant="ghost" size="sm" className="text-xs font-bold text-primary">Ver todo</Button>
+                <Button variant="ghost" size="sm" className="text-xs font-bold text-primary" asChild>
+                  <Link to="/transactions">Ver todo</Link>
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 {recentTx.length > 0 ? (
-                  recentTx.map((transaction) => (
-                    <div key={transaction.id} className="group flex items-center justify-between rounded-xl p-2 transition-colors hover:bg-muted/50">
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          'flex h-10 w-10 items-center justify-center rounded-2xl shadow-sm transition-transform group-hover:scale-110',
-                          transaction.isIncome ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-500'
-                        )}>
-                          {transaction.isIncome ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold tracking-tight">{transaction.description}</p>
-                          <p className="text-[11px] font-medium uppercase text-muted-foreground">
-                            {transaction.date} • {transaction.type}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={cn('text-sm font-bold', transaction.isIncome ? 'text-emerald-600' : 'text-red-500')}>
-                          {transaction.isIncome ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
+                  recentTx.map((tx) => (
+                    <TransactionItem key={tx.id} transaction={tx} />
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center space-y-4 py-20 text-center">
