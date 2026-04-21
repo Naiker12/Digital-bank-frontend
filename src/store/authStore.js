@@ -43,6 +43,12 @@ export const useAuthStore = create(
         set({ user: null, isAuthenticated: false });
         localStorage.removeItem('digital-bank-auth');
       },
+
+      updateUser: (newData) => {
+        set((state) => ({
+          user: { ...state.user, ...newData }
+        }));
+      },
     }),
     {
       name: 'digital-bank-auth',

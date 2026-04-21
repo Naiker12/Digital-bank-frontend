@@ -63,7 +63,7 @@ export function RegisterForm({ className, ...props }) {
                 <div className="flex items-center gap-2">
                   <Landmark className="h-8 w-8 text-primary" />
                   <span className="text-2xl font-bold tracking-tight">
-                    Digital Bank
+                    Banco Unión
                   </span>
                 </div>
                 <p className="text-balance text-sm text-muted-foreground">

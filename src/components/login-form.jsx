@@ -54,7 +54,7 @@ export function LoginForm({ className, ...props }) {
                 <div className="flex items-center gap-2">
                   <Landmark className="h-8 w-8 text-primary" />
                   <span className="text-2xl font-bold tracking-tight">
-                    Digital Bank
+                    Banco Unión
                   </span>
                 </div>
                 <p className="text-balance text-sm text-muted-foreground">
@@ -140,7 +140,7 @@ export function LoginForm({ className, ...props }) {
               </div>
               
               <h2 className="text-3xl font-black tracking-tighter text-white">
-                Digital Bank
+                Banco Unión
               </h2>
               <p className="mt-4 text-balance text-sm font-medium text-slate-400 leading-relaxed">
                 Únete a la nueva era del sistema financiero digital. <br/>

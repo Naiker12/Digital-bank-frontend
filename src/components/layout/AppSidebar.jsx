@@ -67,8 +67,7 @@ export function AppSidebar({ ...props }) {
                   <Landmark className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-bold">Digital Bank</span>
-                  <span className="text-xs text-muted-foreground">Banca Premium</span>
+                  <span className="font-bold text-lg">Banco Unión</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -126,9 +125,11 @@ export function AppSidebar({ ...props }) {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem className="flex items-center gap-2">
-                  <User className="size-4" />
-                  Perfil
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center gap-2 cursor-pointer w-full">
+                    <User className="size-4" />
+                    Perfil
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   className="flex items-center gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
-import { cardService } from '@/services/cardService';
+import { cardService, getDebitPurchaseCount } from '@/services/cardService';
 import { paymentService } from '@/services/paymentService';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,19 +28,34 @@ export default function PaymentModal({ service, open, onClose }) {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
   const [traceId, setTraceId] = useState(null);
+  const [purchaseCount, setPurchaseCount] = useState(0);
 
-  /* ── Cargar tarjetas ──── */
+  /* ── Cargar tarjetas y progreso ──── */
   useEffect(() => {
     if (!open || !user?.uuid) return;
-    const fetchCards = async () => {
+    const loadAppData = async () => {
       setLoadingCards(true);
-      const result = await cardService.getUserCards(user.uuid);
-      if (result.success) {
-        setCards(result.data.filter((c) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(c.status) || !c.status));
+      try {
+        const result = await cardService.getUserCards(user.uuid);
+        if (result.success) {
+          const filteredCards = result.data.filter(
+            (c) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(c.status) || !c.status
+          );
+          setCards(filteredCards);
+
+          // Si hay alguna tarjeta pendiente, cargamos el conteo de compras usando las tarjetas ya obtenidas
+          if (filteredCards.some((c) => c.status === 'PENDING')) {
+            const count = await getDebitPurchaseCount(user.uuid, filteredCards);
+            setPurchaseCount(count);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading modal data:', err);
+      } finally {
+        setLoadingCards(false);
       }
-      setLoadingCards(false);
     };
-    fetchCards();
+    loadAppData();
   }, [open, user?.uuid]);
 
   /* ── Polling del estado ──── */
@@ -178,12 +193,12 @@ export default function PaymentModal({ service, open, onClose }) {
                               <div className="mt-1 flex items-center gap-2">
                                 <div className="h-1.5 w-16 bg-slate-200 rounded-full overflow-hidden">
                                   <div
-                                    className="h-full bg-amber-500 transition-all"
-                                    style={{ width: `${(card.purchaseCount / 10) * 100}%` }}
+                                    className="h-full bg-amber-500 transition-all duration-700"
+                                    style={{ width: `${Math.min((purchaseCount / 10) * 100, 100)}%` }}
                                   />
                                 </div>
                                 <p className="text-[9px] text-amber-600 font-bold uppercase">
-                                  {card.purchaseCount}/10 para activar
+                                  {purchaseCount}/10 para activar
                                 </p>
                               </div>
                             ) : (
@@ -218,11 +233,8 @@ export default function PaymentModal({ service, open, onClose }) {
 
                 <div className="flex flex-col items-center gap-3 pt-1">
                   <p className="text-[9px] text-center text-muted-foreground font-medium leading-relaxed px-6">
-                    Al confirmar, autorizas a <span className="font-bold text-foreground">Digital Bank</span> a debitar el monto especificado.
+                    Al confirmar, autorizas a <span className="font-bold text-foreground">Banco Unión</span> a debitar el monto especificado.
                   </p>
-                  <div className="bg-muted/50 px-3 py-1 rounded-full border border-border">
-                    <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Powered by Naiker Cloud</span>
-                  </div>
                 </div>
               </div>
             </div>

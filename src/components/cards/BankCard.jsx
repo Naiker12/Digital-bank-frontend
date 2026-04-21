@@ -56,8 +56,8 @@ export default function BankCard({ card, onSelect, purchaseCount = 0 }) {
         <div className="relative z-10 flex h-full flex-col justify-between p-6">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-80">Digital Bank</span>
-              <span className="text-[8px] font-medium uppercase tracking-widest opacity-50">Premium Member</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-80">Banco Unión</span>
+              <span className="text-[8px] font-medium uppercase tracking-widest opacity-50">Digital Member</span>
             </div>
             <div className="flex h-6 w-8 items-center justify-center rounded-sm border border-white/20 bg-white/10 backdrop-blur-md">
               <Wifi className="h-3 w-3 rotate-90 opacity-80" />

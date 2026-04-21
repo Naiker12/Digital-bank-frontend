@@ -1,7 +1,9 @@
 import { cardApi } from '@/api/apiClient';
 import { parseResponse, handleError } from './serviceUtils';
 
-const CREDIT_CARD_TYPES = new Set(['CREDIT', 'CREDITO', 'CRÉDITO']);
+const CREDIT_CARD_TYPES = new Set(['CREDIT', 'CREDITO', 'CRÉSITO', 'CRÉDITO']);
+const DEBIT_CARD_TYPES = new Set(['DEBIT', 'DEBITO', 'DÉBITO', 'DÉBIT']);
+const PURCHASE_TYPES = new Set(['PURCHASE', 'COMPRA', 'EXPENSE', 'PAGO_SERVICIO', 'TRANSACCION', 'SALE', 'TRANSACTION']);
 const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 /**
@@ -16,10 +18,10 @@ export function normalizeCard(card) {
     uuid: id,
     cardNumber: card.card_number || card.cardNumber || '****',
     balance: parseFloat(card.balance || 0),
-    type: rawType,
+    type: DEBIT_CARD_TYPES.has(rawType) ? 'DEBIT' : (CREDIT_CARD_TYPES.has(rawType) ? 'CREDIT' : rawType),
     typeLabel: CREDIT_CARD_TYPES.has(rawType) ? 'Crédito' : 'Débito',
     expiryDate: card.expiry_date || card.expiryDate || '12/28',
-    holderName: card.holder_name || card.holderName || 'Usuario Premium',
+    holderName: card.holder_name || card.holderName || 'Usuario Digital',
     network: card.network || 'Visa',
     status: card.status || card.Estado || 'ACTIVE',
     purchaseCount: card.purchaseCount || 0,
@@ -31,8 +33,8 @@ export function normalizeTransaction(transaction, cardId) {
   const amount = Number(transaction.amount || 0);
   const createdAt = transaction.createdAt || transaction.date || transaction.timestamp || null;
   const merchant = transaction.merchant || transaction.description || 'Movimiento';
-  const isIncome = type === 'SAVING' || type === 'PAYMENT_BALANCE';
-  const isExpense = type === 'PURCHASE';
+  const isIncome = type === 'SAVING' || type === 'PAYMENT_BALANCE' || type === 'INCOME';
+  const isExpense = PURCHASE_TYPES.has(type);
   const signedAmount = isIncome ? amount : isExpense ? -amount : amount;
   const parsedDate = createdAt ? new Date(createdAt) : null;
 
@@ -62,30 +64,39 @@ export function normalizeTransaction(transaction, cardId) {
  * Calcula el número total de compras (PURCHASE) realizadas con tarjetas
  * de débito del usuario. Se usa para mostrar el progreso X/10 de
  * activación de la tarjeta de crédito.
- *
- * Reutiliza getUserCards + getCardReport sin modificar ningún backend.
  */
-async function getDebitPurchaseCount(userUuid) {
+async function getDebitPurchaseCount(userUuid, externalCards = null) {
   try {
-    const cardsResult = await cardService.getUserCards(userUuid);
-    if (!cardsResult.success) return 0;
+    if (!userUuid) return 0;
+    
+    let cards;
+    if (externalCards) {
+      cards = externalCards;
+    } else {
+      const cardsResult = await cardService.getUserCards(userUuid);
+      if (!cardsResult.success) return 0;
+      cards = cardsResult.data;
+    }
 
-    const debitCards = cardsResult.data.filter(
+    const debitCards = cards.filter(
       (card) => card.type === 'DEBIT'
     );
 
     if (debitCards.length === 0) return 0;
 
-    const reports = await Promise.all(
+    const reports = await Promise.allSettled(
       debitCards.map((card) => cardService.getCardReport(card.uuid || card.id))
     );
 
-    return reports
-      .filter((report) => report.success)
-      .flatMap((report) => report.data.transactions || [])
-      .filter((tx) => tx.type === 'PURCHASE')
-      .length;
-  } catch {
+    const allTransactions = reports
+      .filter((r) => r.status === 'fulfilled' && r.value.success)
+      .flatMap((r) => r.value.data.transactions || []);
+
+    const count = allTransactions.filter((tx) => tx.isExpense || PURCHASE_TYPES.has(tx.type)).length;
+    console.log(`[cardService] Cálculado purchaseCount: ${count} para usuario ${userUuid}`);
+    return count;
+  } catch (error) {
+    console.error('[cardService] Error en getDebitPurchaseCount:', error);
     return 0;
   }
 }

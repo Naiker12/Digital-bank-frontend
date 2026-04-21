@@ -21,7 +21,7 @@ const TYPE_LABELS = {
  * Tabla responsiva de transacciones: tarjetas en móvil, tabla en desktop.
  * Muestra un estado vacío elegante cuando no hay datos.
  */
-export default function TransactionTable({ transactions }) {
+export default function TransactionTable({ transactions, onSelectTransaction }) {
   if (transactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -42,7 +42,8 @@ export default function TransactionTable({ transactions }) {
           {transactions.map((tx) => (
             <div
               key={tx.id}
-              className="flex items-center justify-between rounded-xl border border-border/40 bg-card p-4 shadow-sm"
+              onClick={() => onSelectTransaction?.(tx)}
+              className="flex items-center justify-between rounded-xl border border-border/40 bg-card p-4 shadow-sm active:scale-95 transition-transform cursor-pointer"
             >
               <div className="flex items-center gap-4">
                 <div className={cn(
@@ -54,7 +55,7 @@ export default function TransactionTable({ transactions }) {
                 <div className="min-w-0">
                   <p className="text-sm font-bold tracking-tight truncate">{tx.description}</p>
                   <p className="text-[11px] font-medium uppercase text-muted-foreground">
-                    {tx.date} • {tx.type}
+                    {tx.date} • {TYPE_LABELS[tx.type] || tx.type}
                   </p>
                 </div>
               </div>
@@ -72,31 +73,37 @@ export default function TransactionTable({ transactions }) {
               <TableRow className="border-muted hover:bg-transparent">
                 <TableHead className="text-[10px] font-bold uppercase tracking-widest py-4 w-10" />
                 <TableHead className="text-[10px] font-bold uppercase tracking-widest py-4">Descripción</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-widest py-4">Tipo</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-widest py-4 text-center">Tipo</TableHead>
                 <TableHead className="text-[10px] font-bold uppercase tracking-widest py-4">Fecha</TableHead>
                 <TableHead className="text-[10px] font-bold uppercase tracking-widest py-4 text-right">Monto</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {transactions.map((tx) => (
-                <TableRow key={tx.id} className="group hover:bg-muted/30 border-muted/20">
+                <TableRow 
+                  key={tx.id} 
+                  onClick={() => onSelectTransaction?.(tx)}
+                  className="group hover:bg-primary/[0.02] border-muted/20 cursor-pointer transition-colors"
+                >
                   <TableCell>
                     <div className={cn(
-                      'flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110',
+                      'flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110 shadow-sm',
                       tx.isIncome ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-500'
                     )}>
                       {tx.isIncome ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
                     </div>
                   </TableCell>
-                  <TableCell className="font-semibold tracking-tight">{tx.description}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-all">
+                  <TableCell className="font-semibold tracking-tight group-hover:text-primary transition-colors">
+                    {tx.description}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-tighter opacity-70 group-hover:opacity-100 group-hover:bg-primary/5 transition-all">
                       {TYPE_LABELS[tx.type] || tx.type}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground font-medium">{tx.date}</TableCell>
                   <TableCell className="text-right">
-                    <span className={cn('font-bold', tx.isIncome ? 'text-emerald-600' : 'text-red-500')}>
+                    <span className={cn('font-bold tracking-tight', tx.isIncome ? 'text-emerald-600' : 'text-red-500')}>
                       {tx.isIncome ? '+' : '-'}${Math.abs(tx.amount).toFixed(2)}
                     </span>
                   </TableCell>

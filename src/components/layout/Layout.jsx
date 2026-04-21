@@ -20,6 +20,7 @@ const PATH_NAMES = {
   '/cards': 'Mis Tarjetas',
   '/catalog': 'Pagar Servicios',
   '/transactions': 'Movimientos',
+  '/profile': 'Mi Perfil',
 };
 
 export default function Layout() {
@@ -42,7 +43,7 @@ export default function Layout() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/dashboard">Digital Bank</BreadcrumbLink>
+                  <BreadcrumbLink href="/dashboard">Banco Unión</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>

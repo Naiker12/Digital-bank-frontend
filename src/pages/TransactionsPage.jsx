@@ -26,8 +26,9 @@ import {
 import StatsGrid from '@/components/transactions/StatsGrid';
 import TransactionTable from '@/components/transactions/TransactionTable';
 import TransactionFilters from '@/components/transactions/TransactionFilters';
+import TransactionDetailModal from '@/components/transactions/TransactionDetailModal';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 8;
 
 export default function TransactionsPage() {
   const user = useAuthStore((s) => s.user);
@@ -35,6 +36,8 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTx, setSelectedTx] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   /* ── Carga de datos ──── */
   useEffect(() => {
@@ -102,6 +105,11 @@ export default function TransactionsPage() {
   const handleFilterChange = (value) => {
     setTypeFilter(value);
     setCurrentPage(1);
+  };
+
+  const handleSelectTransaction = (tx) => {
+    setSelectedTx(tx);
+    setModalOpen(true);
   };
 
   /* ── Stats ──── */
@@ -189,40 +197,63 @@ export default function TransactionsPage() {
             resultCount={filteredTransactions.length}
           />
 
-          <TransactionTable transactions={paginatedTransactions} />
+          <TransactionTable 
+            transactions={paginatedTransactions} 
+            onSelectTransaction={handleSelectTransaction}
+          />
 
           {/* ── Paginación ─── */}
           {totalPages > 1 && (
-            <div className="flex justify-center pt-2">
+            <div className="flex flex-col items-center gap-4 pt-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+                Página <span className="text-primary">{currentPage}</span> de {totalPages}
+              </p>
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      className={cn('cursor-pointer', currentPage === 1 && 'pointer-events-none opacity-50')}
+                      className={cn(
+                        'cursor-pointer rounded-xl border-none hover:bg-primary/10 transition-all', 
+                        currentPage === 1 && 'pointer-events-none opacity-20'
+                      )}
                     />
                   </PaginationItem>
+                  
                   {Array.from({ length: totalPages }).map((_, i) => (
                     <PaginationItem key={i + 1} className="hidden sm:inline-block">
                       <PaginationLink
                         isActive={currentPage === i + 1}
                         onClick={() => setCurrentPage(i + 1)}
-                        className="cursor-pointer"
+                        className={cn(
+                          'cursor-pointer rounded-xl border-none font-bold transition-all',
+                          currentPage === i + 1 ? 'bg-primary text-white shadow-lg shadow-primary/25 hover:bg-primary hover:text-white' : 'hover:bg-primary/10'
+                        )}
                       >
                         {i + 1}
                       </PaginationLink>
                     </PaginationItem>
                   ))}
+
                   <PaginationItem>
                     <PaginationNext
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className={cn('cursor-pointer', currentPage === totalPages && 'pointer-events-none opacity-50')}
+                      className={cn(
+                        'cursor-pointer rounded-xl border-none hover:bg-primary/10 transition-all', 
+                        currentPage === totalPages && 'pointer-events-none opacity-20'
+                      )}
                     />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
             </div>
           )}
+
+          <TransactionDetailModal
+            transaction={selectedTx}
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+          />
         </>
       )}
     </div>
