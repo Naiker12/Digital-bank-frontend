@@ -114,7 +114,10 @@ Sigue estos pasos para poner en marcha el proyecto localmente:
    ```bash
    npm run build
    ```
-
+5. **Correr el scrips**
+   ```bash
+   powershell -ExecutionPolicy Bypass -File "D:\digital-bank-frontend\terraform\deploy.ps1"
+   ```
 ---
 
 ## 🔧 Resolución de Problemas (Troubleshooting)
