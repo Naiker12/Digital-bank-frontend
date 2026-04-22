@@ -25,30 +25,28 @@ export default function CardsPage() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [purchaseCount, setPurchaseCount] = useState(0);
 
-  const hasPendingCredit = cards.some(
-    (card) => card.type === 'CREDIT' && card.status === 'PENDING'
-  );
-
   const fetchCards = async () => {
     if (!user?.uuid) return;
 
     try {
       setLoading(true);
       const result = await cardService.getUserCards(user.uuid);
-      if (result.success) {
-        const activeCards = result.data
-          .filter((card) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(card.status) || !card.status)
-          .map((card) => ({
-            ...card,
+        if (result.success) {
+          const activeCards = result.data
+            .filter((card) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(card.status) || !card.status)
+            .map((card) => ({
+              ...card,
             holder: `${user.name || ''} ${user.lastName || ''}`.trim() || card.holderName,
             last4: (card.cardNumber || '').slice(-4),
-            number: card.cardNumber || '****',
-            expiry: card.expiryDate,
-          }));
-        setCards(activeCards);
-      } else {
-        toast.error(result.message);
-      }
+              number: card.cardNumber || '****',
+              expiry: card.expiryDate,
+            }));
+          setCards(activeCards);
+          const count = await getDebitPurchaseCount(user.uuid, activeCards);
+          setPurchaseCount(count);
+        } else {
+          toast.error(result.message);
+        }
     } catch (error) {
       console.error('Error fetching cards:', error);
       toast.error('No se pudieron cargar tus tarjetas');
@@ -60,11 +58,6 @@ export default function CardsPage() {
   useEffect(() => {
     fetchCards();
   }, [user?.uuid, user?.name, user?.lastName]);
-
-  useEffect(() => {
-    if (!hasPendingCredit || !user?.uuid) return;
-    getDebitPurchaseCount(user.uuid).then(setPurchaseCount);
-  }, [hasPendingCredit, user?.uuid]);
 
   return (
     <div className="space-y-8 pb-10">
@@ -95,7 +88,9 @@ export default function CardsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => {
-            const isPending = card.type === 'CREDIT' && card.status === 'PENDING';
+            const isCreditLocked = card.type === 'CREDIT' && purchaseCount < 10;
+            const isPending = isCreditLocked || card.status === 'PENDING';
+            const remaining = Math.max(10 - purchaseCount, 0);
 
             return (
               <Card key={card.uuid || card.id}>
@@ -119,7 +114,12 @@ export default function CardsPage() {
                   <CardDescription>•••• {card.last4}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <BankCard card={card} onSelect={setSelectedCard} purchaseCount={purchaseCount} />
+                  <BankCard
+                    card={card}
+                    onSelect={isPending ? null : setSelectedCard}
+                    purchaseCount={purchaseCount}
+                    locked={isCreditLocked}
+                  />
 
                   {isPending ? (
                     <div className="space-y-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
@@ -131,7 +131,7 @@ export default function CardsPage() {
                       </div>
                       <ActivationProgress count={purchaseCount} />
                       <p className="text-[10px] text-red-600/70 dark:text-red-400/50 leading-relaxed">
-                        Realiza {10 - purchaseCount} compra{10 - purchaseCount !== 1 ? 's' : ''} más con tu tarjeta de débito para desbloquear esta tarjeta de crédito.
+                        Realiza {remaining} compra{remaining !== 1 ? 's' : ''} más con tu tarjeta de débito para desbloquear esta tarjeta de crédito.
                       </p>
                     </div>
                   ) : (
@@ -142,7 +142,7 @@ export default function CardsPage() {
                           {Number(card.balance || 0).toFixed(2)} US$
                         </p>
                       </div>
-                      <Button variant="outline" onClick={() => setSelectedCard(card)}>
+                      <Button variant="outline" onClick={() => setSelectedCard(card)} disabled={isCreditLocked}>
                         {card.type === 'CREDIT' ? 'Pagar' : 'Recargar'}
                       </Button>
                     </div>

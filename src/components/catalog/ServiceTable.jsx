@@ -20,11 +20,11 @@ export default function ServiceTable({ items, emptyCount, onSelect }) {
 
   return (
     <Card className="border-none shadow-sm overflow-hidden w-full max-w-full bg-transparent md:bg-card">
-      <CardContent className="p-0">
+      <CardContent className="min-w-0 overflow-x-hidden p-0">
         {/* Vista Móvil */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden py-4 px-2">
+        <div className="grid grid-cols-1 gap-4 overflow-x-hidden px-2 py-4 sm:grid-cols-2 md:hidden">
           {items.map((s) => (
-            <div key={s.id} className="flex flex-col gap-4 rounded-2xl border border-border/60 p-5 shadow-sm bg-card hover:border-primary/30 transition-all">
+            <div key={s.id} className="flex min-w-0 flex-col gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm transition-all hover:border-primary/30 sm:p-5">
               <div className="flex justify-between items-start">
                 <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-wider border-none px-2.5">
                   {s.categoria}
@@ -37,14 +37,14 @@ export default function ServiceTable({ items, emptyCount, onSelect }) {
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100">{s.proveedor}</h3>
-                <p className="text-muted-foreground text-sm font-medium">{s.servicio}</p>
+                <h3 className="truncate font-bold text-base tracking-tight text-slate-900 dark:text-slate-100 sm:text-lg">{s.proveedor}</h3>
+                <p className="break-words text-sm font-medium text-muted-foreground">{s.servicio}</p>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
                 <p className="text-[11px] font-semibold opacity-50 uppercase tracking-wider">Plan {s.plan}</p>
               </div>
-              <div className="flex items-center justify-between mt-2 pt-4 border-t border-border/40">
+              <div className="mt-2 flex flex-col gap-3 border-t border-border/40 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <Badge
                   className={cn(
                     'rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider border-none shadow-none',
@@ -55,7 +55,7 @@ export default function ServiceTable({ items, emptyCount, onSelect }) {
                 </Badge>
                 <Button
                   size="sm"
-                  className="rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-primary/10 px-4 h-9"
+                  className="h-9 w-full rounded-xl px-4 text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/10 sm:w-auto sm:text-[11px]"
                   disabled={s.estado !== 'Activo'}
                   onClick={() => onSelect(s)}
                 >

@@ -17,7 +17,14 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { Search, Loader2 } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 /* ── Componentes extraídos ──── */
 import ServiceTable from '@/components/catalog/ServiceTable';
@@ -77,39 +84,82 @@ export default function CatalogPage() {
   };
 
   return (
-    <div className="space-y-6 pb-10 font-sans">
+    <div className="space-y-5 overflow-x-hidden pb-10 font-sans sm:space-y-6">
       {/* ── Header ─── */}
-      <div className="flex flex-col gap-1 px-2 md:px-0">
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Servicios y Pagos</h1>
-        <p className="text-muted-foreground text-sm md:text-base">
+      <div className="flex flex-col gap-1 px-2 sm:px-3 md:px-0">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">Servicios y Pagos</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
           Gestiona y paga tus facturas de servicios públicos de forma centralizada.
         </p>
       </div>
 
       {/* ── Filtros ─── */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-2 md:px-0">
-        <Tabs defaultValue="all" value={category} onValueChange={handleCategoryChange} className="w-full md:w-auto">
-          <TabsList className="bg-muted/50 p-1 h-12 w-full flex overflow-x-auto justify-start scrollbar-hide flex-nowrap border border-border/50">
-            {categories.map((cat) => (
-              <TabsTrigger
-                key={cat}
-                value={cat}
-                className="rounded-lg px-5 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm whitespace-nowrap transition-all"
-              >
-                {cat === 'all' ? 'Todos' : cat}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+      <div className="px-2 sm:px-3 md:px-0">
+        <div className="rounded-2xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-sm md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-0">
+          <div className="space-y-3 md:hidden">
+            <div className="group relative w-full min-w-0">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              <Input
+                placeholder="Buscar por nombre o proveedor..."
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="h-12 rounded-xl border-border/80 bg-background pl-11 shadow-sm focus-visible:ring-primary"
+              />
+            </div>
 
-        <div className="relative w-full md:max-w-xs group">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input
-            placeholder="Buscar por nombre o proveedor..."
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="h-12 pl-11 rounded-xl bg-background border-border/80 focus-visible:ring-primary shadow-sm"
-          />
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex h-11 w-full items-center justify-between rounded-xl border border-border/80 bg-background px-4 text-sm font-medium text-foreground shadow-sm"
+                  >
+                    <span className="truncate">
+                      {category === 'all' ? 'Todas las categorías' : category}
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
+                  {categories.map((cat) => (
+                    <DropdownMenuItem
+                      key={cat}
+                      onSelect={() => handleCategoryChange(cat)}
+                      className="cursor-pointer"
+                    >
+                      {cat === 'all' ? 'Todos' : cat}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          <div className="hidden min-w-0 flex-col gap-3 md:flex md:flex-row md:items-center md:justify-between">
+            <Tabs defaultValue="all" value={category} onValueChange={handleCategoryChange} className="w-full min-w-0 md:w-auto">
+              <TabsList className="bg-muted/50 h-11 w-full min-w-0 flex flex-nowrap justify-start border border-border/50 p-1 scrollbar-hide sm:overflow-x-auto sm:overscroll-x-contain">
+                {categories.map((cat) => (
+                  <TabsTrigger
+                    key={cat}
+                    value={cat}
+                    className="w-auto shrink-0 whitespace-nowrap rounded-lg px-5 text-[10px] font-bold uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    {cat === 'all' ? 'Todos' : cat}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <div className="group relative w-full min-w-0 md:max-w-sm">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              <Input
+                placeholder="Buscar por nombre o proveedor..."
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="h-12 rounded-xl border-border/80 bg-background pl-11 shadow-sm focus-visible:ring-primary"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

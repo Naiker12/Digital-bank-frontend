@@ -1,4 +1,8 @@
 $ErrorActionPreference = "Stop"
+$scriptRoot = $PSScriptRoot
+$repoRoot = Resolve-Path (Join-Path $scriptRoot "..")
+$distPath = Join-Path $repoRoot "dist"
+$distIndex = Join-Path $distPath "index.html"
 
 Write-Host "----------------------------------------"
 Write-Host "Starting Deployment Process..."
@@ -15,21 +19,23 @@ if (!(Get-Command aws -ErrorAction SilentlyContinue)) {
 
 # 2. Check for Build Artifacts
 Write-Host "Checking for build artifacts..."
-if (!(Test-Path "../dist/index.html")) {
+if (!(Test-Path $distIndex)) {
     Write-Host "Build not found. Building React app..."
-    Push-Location ..
+    Push-Location $repoRoot
     npm install
     npm run build
     Pop-Location
 } else {
-    Write-Host "Found existing build in ../dist/. Skipping build step."
+    Write-Host "Found existing build in dist/. Skipping build step."
 }
 
 # 3. Terraform Info
 Write-Host "Extracting infrastructure details from Terraform..."
+Push-Location $scriptRoot
 $BUCKET_NAME = terraform output -raw s3_bucket_name
 $DISTRIBUTION_ID = terraform output -raw cloudfront_distribution_id
 $DOMAIN_NAME = terraform output -raw cloudfront_domain_name
+Pop-Location
 
 if ([string]::IsNullOrEmpty($BUCKET_NAME) -or [string]::IsNullOrEmpty($DISTRIBUTION_ID)) {
     Write-Error "Error: Could not get Terraform outputs. Please run 'terraform apply' first."
@@ -40,7 +46,7 @@ Write-Host "CloudFront ID: $DISTRIBUTION_ID"
 
 # 4. Sync S3
 Write-Host "Uploading to S3..."
-aws s3 sync ../dist/ "s3://$BUCKET_NAME" --delete
+aws s3 sync $distPath "s3://$BUCKET_NAME" --delete
 
 # 5. Invalidate CloudFront
 Write-Host "Invalidating CloudFront cache..."

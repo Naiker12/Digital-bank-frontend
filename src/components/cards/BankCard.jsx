@@ -7,8 +7,8 @@ const CARD_GRADIENTS = {
   CREDIT_PENDING: 'from-rose-800 via-red-900 to-red-950',
 };
 
-function getCardGradient(card) {
-  if (card.type === 'CREDIT' && card.status === 'PENDING') {
+function getCardGradient(card, locked = false) {
+  if (card.type === 'CREDIT' && (card.status === 'PENDING' || locked)) {
     return CARD_GRADIENTS.CREDIT_PENDING;
   }
   if (card.type === 'CREDIT') {
@@ -21,19 +21,20 @@ function getCardGradient(card) {
  * Componente visual que renderiza el aspecto físico de una tarjeta bancaria.
  * Cambia de gradiente según tipo (DEBIT/CREDIT) y estado (PENDING).
  */
-export default function BankCard({ card, onSelect, purchaseCount = 0 }) {
-  const isPending = card.type === 'CREDIT' && card.status === 'PENDING';
+export default function BankCard({ card, onSelect, purchaseCount = 0, locked = false }) {
+  const isPending = card.type === 'CREDIT' && (card.status === 'PENDING' || locked);
 
   return (
     <button
       type="button"
-      onClick={() => onSelect(card)}
+      onClick={() => onSelect?.(card)}
+      disabled={isPending}
       className="w-full text-left"
     >
       <div
         className={cn(
           'group relative aspect-[1.586/1] w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-br shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:shadow-primary/30',
-          getCardGradient(card),
+          getCardGradient(card, locked),
           isPending && 'opacity-80'
         )}
       >

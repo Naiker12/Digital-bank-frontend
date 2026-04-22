@@ -11,7 +11,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from '@/components/ui/field';
-import { Landmark, Loader2 } from 'lucide-react';
+import { Landmark, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export function RegisterForm({ className, ...props }) {
   const [form, setForm] = useState({
@@ -25,6 +25,8 @@ export function RegisterForm({ className, ...props }) {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const register = useAuthStore((s) => s.register);
   const navigate = useNavigate();
 
@@ -37,7 +39,7 @@ export function RegisterForm({ className, ...props }) {
     setError('');
 
     if (form.password !== form.confirmPassword) {
-      setError('Las contraseñas no coinciden');
+      setError('Las contrasenas no coinciden');
       return;
     }
 
@@ -45,8 +47,7 @@ export function RegisterForm({ className, ...props }) {
     const { confirmPassword, ...userData } = form;
     const result = await register(userData);
     if (result.success) {
-      // Como el registro no inicia sesión automáticamente, vamos al login
-      navigate('/login', { state: { message: 'Cuenta creada con éxito. Ingresa tus credenciales.' } });
+      navigate('/login', { state: { message: 'Cuenta creada con exito. Ingresa tus credenciales.' } });
     } else {
       setError(result.message);
     }
@@ -55,16 +56,14 @@ export function RegisterForm({ className, ...props }) {
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className="overflow-hidden p-0 border-none shadow-xl min-h-[600px] flex flex-col md:flex-row">
-        <CardContent className="grid p-0 md:grid-cols-2 flex-1">
-          <form className="p-8 md:p-12 flex flex-col justify-center" onSubmit={handleSubmit}>
+      <Card className="min-h-[600px] flex flex-col overflow-hidden border-none p-0 shadow-xl md:flex-row">
+        <CardContent className="grid flex-1 p-0 md:grid-cols-2">
+          <form className="flex flex-col justify-center p-8 md:p-12" onSubmit={handleSubmit}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="flex items-center gap-2">
                   <Landmark className="h-8 w-8 text-primary" />
-                  <span className="text-2xl font-bold tracking-tight">
-                    Banco Unión
-                  </span>
+                  <span className="text-2xl font-bold tracking-tight">Banco Union</span>
                 </div>
                 <p className="text-balance text-sm text-muted-foreground">
                   Crea tu cuenta y empieza a operar
@@ -94,7 +93,7 @@ export function RegisterForm({ className, ...props }) {
                   <Input
                     id="lastName"
                     name="lastName"
-                    placeholder="Gómez"
+                    placeholder="Gomez"
                     value={form.lastName}
                     onChange={handleChange}
                     required
@@ -115,7 +114,7 @@ export function RegisterForm({ className, ...props }) {
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="reg-email">Correo electrónico</FieldLabel>
+                <FieldLabel htmlFor="reg-email">Correo electronico</FieldLabel>
                 <Input
                   id="reg-email"
                   name="email"
@@ -128,7 +127,7 @@ export function RegisterForm({ className, ...props }) {
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
+                <FieldLabel htmlFor="phone">Telefono</FieldLabel>
                 <Input
                   id="phone"
                   name="phone"
@@ -141,72 +140,95 @@ export function RegisterForm({ className, ...props }) {
 
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel htmlFor="reg-password">Contraseña</FieldLabel>
-                  <Input
-                    id="reg-password"
-                    name="password"
-                    type="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                  />
+                  <FieldLabel htmlFor="reg-password">Contrasena</FieldLabel>
+                  <div className="relative">
+                    <Input
+                      id="reg-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={handleChange}
+                      className="pr-11"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                      onClick={() => setShowPassword((value) => !value)}
+                      aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                      aria-pressed={showPassword}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="confirmPassword">Confirmar</FieldLabel>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={form.confirmPassword}
-                    onChange={handleChange}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={form.confirmPassword}
+                      onChange={handleChange}
+                      className="pr-11"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                      onClick={() => setShowConfirmPassword((value) => !value)}
+                      aria-label={showConfirmPassword ? 'Ocultar confirmacion' : 'Mostrar confirmacion'}
+                      aria-pressed={showConfirmPassword}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </Field>
               </div>
 
               <Field>
                 <Button type="submit" disabled={loading} className="w-full">
-                  {loading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {loading ? 'Creando cuenta...' : 'Crear cuenta'}
                 </Button>
               </Field>
 
               <FieldDescription className="text-center">
-                ¿Ya tienes cuenta?{' '}
+                Ya tienes cuenta?{' '}
                 <Link
                   to="/login"
                   className="font-medium underline underline-offset-4 hover:text-primary"
                 >
-                  Iniciar sesión
+                  Iniciar sesion
                 </Link>
               </FieldDescription>
             </FieldGroup>
           </form>
 
-          {/* Panel derecho — Diseño Premium */}
           <div className="relative hidden overflow-hidden bg-slate-950 md:block">
-            {/* Mesh Gradient Animado */}
             <div className="absolute inset-0 bg-mesh-pattern opacity-20" />
             <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-[100px]" />
             <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-primary/20 blur-[100px]" />
-            
+
             <div className="relative z-10 flex h-full flex-col items-center justify-center p-12 text-center">
-              <div className="mb-8 rounded-3xl bg-white/5 p-4 backdrop-blur-xl border border-white/10 shadow-2xl">
+              <div className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl">
                 <Landmark className="h-12 w-12 text-primary" />
               </div>
-              
+
               <h2 className="text-3xl font-black tracking-tighter text-white">
                 Bienvenido
               </h2>
-              <p className="mt-4 text-balance text-sm font-medium text-slate-400 leading-relaxed">
-                Empieza hoy tu camino hacia una mejor gestión financiera. <br/>
+              <p className="mt-4 text-balance text-sm font-medium leading-relaxed text-slate-400">
+                Empieza hoy tu camino hacia una mejor gestion financiera. <br />
                 Abre tu cuenta en minutos y disfruta de beneficios exclusivos.
               </p>
 
-              {/* Decoración abstracta */}
-              <div className="mt-12 relative w-64 h-32 rounded-3xl bg-gradient-to-tr from-primary/20 via-primary/5 to-transparent border border-white/5 backdrop-blur-sm -rotate-6 translate-y-10 opacity-40" />
+              <div className="mt-12 relative h-32 w-64 -rotate-6 translate-y-10 rounded-3xl border border-white/5 bg-gradient-to-tr from-primary/20 via-primary/5 to-transparent backdrop-blur-sm opacity-40" />
             </div>
           </div>
         </CardContent>

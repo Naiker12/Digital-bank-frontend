@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { cardService, getDebitPurchaseCount } from '@/services/cardService';
@@ -29,6 +29,7 @@ export default function PaymentModal({ service, open, onClose }) {
   const [paymentError, setPaymentError] = useState(null);
   const [traceId, setTraceId] = useState(null);
   const [purchaseCount, setPurchaseCount] = useState(0);
+  const pollingRef = useRef(null);
 
   /* ── Cargar tarjetas y progreso ──── */
   useEffect(() => {
@@ -42,12 +43,8 @@ export default function PaymentModal({ service, open, onClose }) {
             (c) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(c.status) || !c.status
           );
           setCards(filteredCards);
-
-          // Si hay alguna tarjeta pendiente, cargamos el conteo de compras usando las tarjetas ya obtenidas
-          if (filteredCards.some((c) => c.status === 'PENDING')) {
-            const count = await getDebitPurchaseCount(user.uuid, filteredCards);
-            setPurchaseCount(count);
-          }
+          const count = await getDebitPurchaseCount(user.uuid, filteredCards);
+          setPurchaseCount(count);
         }
       } catch (err) {
         console.error('Error loading modal data:', err);
@@ -61,25 +58,35 @@ export default function PaymentModal({ service, open, onClose }) {
   /* ── Polling del estado ──── */
   useEffect(() => {
     if (!traceId) return;
-    const interval = setInterval(async () => {
+    const pollStatus = async () => {
       const result = await paymentService.getPaymentStatus(traceId);
-      if (result.success) {
-        const { status, error: apiError } = result;
-        setPaymentStatus(status);
-        if (apiError) setPaymentError(apiError);
 
-        if (status === 'FINISH' || status === 'FAILED') {
-          clearInterval(interval);
-          if (status === 'FINISH') {
-            toast.success(`Pago a ${service.proveedor} completado`);
-          } else {
-            toast.error(apiError || 'Pago fallido');
-          }
+      if (!result.success) {
+        setPaymentStatus('FAILED');
+        setPaymentError(result.message || 'No se pudo consultar el estado del pago');
+        clearInterval(pollingRef.current);
+        toast.error(result.message || 'No se pudo consultar el estado del pago');
+        return;
+      }
+
+      const { status, error: apiError } = result;
+      setPaymentStatus(status);
+      if (apiError) setPaymentError(apiError);
+
+      if (status === 'FINISH' || status === 'FAILED') {
+        clearInterval(pollingRef.current);
+        if (status === 'FINISH') {
+          toast.success(`Pago a ${service.proveedor} completado`);
+        } else {
+          toast.error(apiError || 'Pago fallido');
         }
       }
-    }, 3000);
+    };
 
-    return () => clearInterval(interval);
+    pollStatus();
+    pollingRef.current = setInterval(pollStatus, 1500);
+
+    return () => clearInterval(pollingRef.current);
   }, [traceId, service?.proveedor]);
 
   const handlePay = async () => {
@@ -114,7 +121,7 @@ export default function PaymentModal({ service, open, onClose }) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-md sm:w-full">
         {paymentStatus ? (
           <PaymentTracker
             status={paymentStatus}
@@ -123,7 +130,7 @@ export default function PaymentModal({ service, open, onClose }) {
             onReset={handleClose}
           />
         ) : (
-          <div className="space-y-6 pt-2">
+          <div className="space-y-5 pt-1 sm:space-y-6 sm:pt-2">
             <DialogHeader>
               <DialogTitle>Confirmar pago de servicio</DialogTitle>
               <DialogDescription className="sr-only">
@@ -131,14 +138,14 @@ export default function PaymentModal({ service, open, onClose }) {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-6">
               {/* Resumen del monto */}
-              <div className="rounded-lg bg-muted p-6 text-center">
+              <div className="rounded-lg bg-muted p-4 text-center sm:p-6">
                 <p className="text-xs text-muted-foreground mb-1">Total a pagar</p>
-                <p className="text-4xl font-bold">
+                <p className="text-3xl font-bold leading-none sm:text-4xl">
                   {service.precio_mensual.toFixed(2)} <span className="text-xl opacity-40">US$</span>
                 </p>
-                <p className="mt-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <p className="mt-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider sm:text-xs">
                   {service.proveedor} — {service.servicio}
                 </p>
               </div>
@@ -165,33 +172,39 @@ export default function PaymentModal({ service, open, onClose }) {
                 ) : (
                   <div className="space-y-3">
                     {cards.map((card) => (
+                      (() => {
+                        const isCreditLocked = card.type === 'CREDIT' && purchaseCount < 10;
+                        const isDisabled = card.status === 'PENDING' || isCreditLocked;
+                        const remaining = Math.max(10 - purchaseCount, 0);
+
+                        return (
                       <button
                         key={card.id}
                         type="button"
-                        disabled={card.status === 'PENDING'}
-                        onClick={() => setSelectedCard(card.id)}
+                        disabled={isDisabled}
+                        onClick={() => !isDisabled && setSelectedCard(card.id)}
                         className={cn(
-                          'flex w-full items-center justify-between rounded-xl border p-4 transition-all',
-                          card.status === 'PENDING' ? 'opacity-60 cursor-not-allowed' : 'hover:bg-slate-50',
+                          'flex w-full flex-col gap-4 rounded-xl border p-3 text-left transition-all sm:flex-row sm:items-center sm:justify-between sm:p-4',
+                          isDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-slate-50',
                           selectedCard === card.id
                             ? 'border-primary bg-primary/[0.04] ring-1 ring-primary'
                             : 'border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900'
                         )}
                       >
-                        <div className="flex items-center gap-4 text-left">
+                        <div className="flex min-w-0 items-start gap-4 text-left">
                           <div className={cn(
-                            'h-10 w-14 rounded-lg flex items-center justify-center transition-all',
+                            'h-10 w-14 shrink-0 rounded-lg flex items-center justify-center transition-all',
                             selectedCard === card.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
                           )}>
                             <CreditCard className="h-5 w-5" />
                           </div>
-                          <div>
-                            <p className="text-sm font-bold">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold">
                               {card.type} <span className="font-medium text-muted-foreground">•••• {formatCardNumber(card.cardNumber)}</span>
                             </p>
-                            {card.status === 'PENDING' ? (
+                            {isDisabled ? (
                               <div className="mt-1 flex items-center gap-2">
-                                <div className="h-1.5 w-16 bg-slate-200 rounded-full overflow-hidden">
+                                <div className="h-1.5 w-16 shrink-0 bg-slate-200 rounded-full overflow-hidden">
                                   <div
                                     className="h-full bg-amber-500 transition-all duration-700"
                                     style={{ width: `${Math.min((purchaseCount / 10) * 100, 100)}%` }}
@@ -202,7 +215,7 @@ export default function PaymentModal({ service, open, onClose }) {
                                 </p>
                               </div>
                             ) : (
-                              <p className="text-[10px] text-muted-foreground font-medium">
+                              <p className="text-[10px] text-muted-foreground font-medium leading-snug">
                                 Disponible: <span className="font-bold text-foreground">${parseFloat(card.balance || 0).toLocaleString()}</span>
                               </p>
                             )}
@@ -210,12 +223,14 @@ export default function PaymentModal({ service, open, onClose }) {
                         </div>
 
                         <div className={cn(
-                          'h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all',
+                          'h-5 w-5 self-end shrink-0 rounded-full border-2 flex items-center justify-center transition-all sm:self-auto',
                           selectedCard === card.id ? 'border-primary bg-primary' : 'border-slate-200'
                         )}>
                           {selectedCard === card.id && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                         </div>
                       </button>
+                        );
+                      })()
                     ))}
                   </div>
                 )}
@@ -224,7 +239,7 @@ export default function PaymentModal({ service, open, onClose }) {
               {/* Botón de confirmación */}
               <div className="space-y-4">
                 <Button
-                  className="w-full rounded-xl py-6 font-bold text-sm uppercase tracking-widest shadow-lg shadow-primary/20"
+                  className="w-full rounded-xl py-5 text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/20 sm:py-6"
                   disabled={!selectedCard}
                   onClick={handlePay}
                 >
@@ -232,7 +247,7 @@ export default function PaymentModal({ service, open, onClose }) {
                 </Button>
 
                 <div className="flex flex-col items-center gap-3 pt-1">
-                  <p className="text-[9px] text-center text-muted-foreground font-medium leading-relaxed px-6">
+                  <p className="px-4 text-center text-[9px] font-medium leading-relaxed text-muted-foreground sm:px-6">
                     Al confirmar, autorizas a <span className="font-bold text-foreground">Banco Unión</span> a debitar el monto especificado.
                   </p>
                 </div>

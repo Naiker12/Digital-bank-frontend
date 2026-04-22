@@ -33,12 +33,13 @@ export default function DashboardPage() {
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [purchaseCount, setPurchaseCount] = useState(0);
+  const [purchaseCount, setPurchaseCount] = useState(null);
 
-  const pendingCreditCard = useMemo(
-    () => cards.find((card) => card.type === 'CREDIT' && card.status === 'PENDING'),
+  const hasCreditCard = useMemo(
+    () => cards.some((card) => card.type === 'CREDIT'),
     [cards]
   );
+  const creditNeedsActivation = hasCreditCard && purchaseCount !== null && purchaseCount < 10;
 
   /* ── Carga de datos ──── */
   useEffect(() => {
@@ -102,9 +103,25 @@ export default function DashboardPage() {
   }, [user?.uuid]);
 
   useEffect(() => {
-    if (!pendingCreditCard || !user?.uuid) return;
-    getDebitPurchaseCount(user.uuid).then(setPurchaseCount);
-  }, [pendingCreditCard, user?.uuid]);
+    if (!user?.uuid) return;
+
+    if (!hasCreditCard) {
+      setPurchaseCount(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    getDebitPurchaseCount(user.uuid, cards).then((count) => {
+      if (!cancelled) {
+        setPurchaseCount(count);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasCreditCard, cards, user?.uuid]);
 
   const totalBalance = useMemo(
     () => cards.reduce((sum, card) => sum + parseFloat(card.balance || 0), 0),
@@ -184,7 +201,7 @@ export default function DashboardPage() {
         <>
           <StatsGrid stats={stats} />
 
-          {pendingCreditCard && (
+          {creditNeedsActivation && (
             <CreditActivationAlert purchaseCount={purchaseCount} />
           )}
 
