@@ -11,7 +11,9 @@ export function parseResponse(response) {
   if (typeof data?.body === 'string') {
     try {
       const bodyData = JSON.parse(data.body);
-      data = { ...data, ...bodyData };
+      data = Array.isArray(bodyData)
+        ? bodyData
+        : { ...data, ...bodyData };
     } catch (e) {
       console.warn('Body data is not JSON string:', data.body);
     }

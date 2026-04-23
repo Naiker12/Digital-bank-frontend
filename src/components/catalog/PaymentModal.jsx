@@ -88,8 +88,16 @@ export default function PaymentModal({ service, open, onClose }) {
     setPaymentStatus('INITIAL');
     setPaymentError(null);
 
+    const cardId = selectedCard.uuid || selectedCard.id;
+    if (!cardId) {
+      setPaymentStatus('FAILED');
+      setPaymentError('No se pudo identificar la tarjeta seleccionada.');
+      toast.error('No se pudo identificar la tarjeta seleccionada.');
+      return;
+    }
+
     const result = await paymentService.initiatePayment({
-      cardId: selectedCard,
+      cardId,
       service,
       userId: user?.uuid,
     });
@@ -175,11 +183,11 @@ export default function PaymentModal({ service, open, onClose }) {
                         key={card.id}
                         type="button"
                         disabled={isDisabled}
-                        onClick={() => !isDisabled && setSelectedCard(card.id)}
+                            onClick={() => !isDisabled && setSelectedCard(card)}
                         className={cn(
                           'flex w-full flex-col gap-4 rounded-xl border p-3 text-left transition-all sm:flex-row sm:items-center sm:justify-between sm:p-4',
                           isDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-slate-50',
-                          selectedCard === card.id
+                          selectedCard?.id === card.id
                             ? 'border-primary bg-primary/[0.04] ring-1 ring-primary'
                             : 'border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900'
                         )}
@@ -187,7 +195,7 @@ export default function PaymentModal({ service, open, onClose }) {
                         <div className="flex min-w-0 items-start gap-4 text-left">
                           <div className={cn(
                             'h-10 w-14 shrink-0 rounded-lg flex items-center justify-center transition-all',
-                            selectedCard === card.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                            selectedCard?.id === card.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
                           )}>
                             <CreditCard className="h-5 w-5" />
                           </div>
@@ -217,9 +225,9 @@ export default function PaymentModal({ service, open, onClose }) {
 
                         <div className={cn(
                           'h-5 w-5 self-end shrink-0 rounded-full border-2 flex items-center justify-center transition-all sm:self-auto',
-                          selectedCard === card.id ? 'border-primary bg-primary' : 'border-slate-200'
+                          selectedCard?.id === card.id ? 'border-primary bg-primary' : 'border-slate-200'
                         )}>
-                          {selectedCard === card.id && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                          {selectedCard?.id === card.id && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                         </div>
                       </button>
                         );

@@ -12,7 +12,7 @@ El proyecto se encuentra en una fase avanzada de diseño y prototipado funcional
 - **Dashboard Principal**: Resumen financiero que incluye saldo total, gestión de tarjetas y estadísticas en tiempo real.
 - **Visualización de Datos**: Integración de gráficos de área (`Recharts`) para el seguimiento de ingresos y gastos.
 - **Gestión de Tarjetas**: Interfaz intuitiva para visualizar múltiples productos bancarios (Débito/Crédito) y sus estados.
-- **Catálogo de Servicios**: Sistema de pagos categorizado (Servicios públicos, Internet, Telefonía) listo para procesar pagos.
+- **Catálogo de Servicios**: El catálogo se consume desde el servicio de tarjetas mediante `GET /catalog`.
 - **Mocking System**: Actualmente el proyecto utiliza un motor de datos de prueba (`mockData.js`) que permite navegar y testear toda la interfaz sin necesidad de un backend activo, acelerando el desarrollo del frontend.
 
 ---
@@ -85,8 +85,9 @@ El frontend está preparado para transicionar de datos mock a datos reales media
 3. **Transaction Service** (`/api/transactions`)
     - `GET /history`: Historial de operaciones con filtros.
     - `POST /transfer`: Ejecución de transferencias.
-4. **Catalog Service** (`/api/catalog`)
-    - `GET /services`: Lista de convenios y proveedores para pagos.
+4. **Catalog Service** (`/catalog`)
+    - `GET /catalog`: Lista de convenios y proveedores para pagos.
+    - `POST /catalog/update`: Actualiza el CSV de catálogo en el servicio de tarjetas.
 
 ---
 
@@ -114,7 +115,7 @@ Sigue estos pasos para poner en marcha el proyecto localmente:
    ```bash
    npm run build
    ```
-5. **Correr el scrips**
+5. **Correr el script de despliegue**
    ```bash
    powershell -ExecutionPolicy Bypass -File "D:\digital-bank-frontend\terraform\deploy.ps1"
    ```
