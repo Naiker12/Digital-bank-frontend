@@ -1,10 +1,11 @@
 import { cardApi } from '@/api/apiClient';
 import { parseResponse, handleError } from './serviceUtils';
 
-const CREDIT_CARD_TYPES = new Set(['CREDIT', 'CREDITO', 'CRÉSITO', 'CRÉDITO']);
-const DEBIT_CARD_TYPES = new Set(['DEBIT', 'DEBITO', 'DÉBITO', 'DÉBIT']);
+const CREDIT_CARD_TYPES = new Set(['CREDIT', 'CREDITO', 'CRÉDITO']);
+const DEBIT_CARD_TYPES = new Set(['DEBIT', 'DEBITO', 'DÉBITO']);
 const PURCHASE_TYPES = new Set(['PURCHASE', 'COMPRA', 'EXPENSE', 'PAGO_SERVICIO', 'TRANSACCION', 'SALE', 'TRANSACTION']);
 const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const CARD_AMOUNT = 1000;
 
 export function normalizeCard(card) {
   const id = card.id || card.uuid || card.ID;
@@ -61,19 +62,20 @@ async function getDebitPurchaseCount(userUuid, externalCards = null) {
   try {
     if (!userUuid) return 0;
 
-    let cards;
-    if (externalCards) {
-      cards = externalCards;
-    } else {
-      const cardsResult = await cardService.getUserCards(userUuid);
-      if (!cardsResult.success) return 0;
-      cards = cardsResult.data;
+    if (externalCards && externalCards.length > 0) {
+      const hasPurchaseCount = externalCards.some((card) => card.purchaseCount !== undefined && card.purchaseCount !== null);
+      if (hasPurchaseCount) {
+        return externalCards
+          .filter((card) => card.type === 'DEBIT')
+          .reduce((sum, card) => sum + Number(card.purchaseCount || 0), 0);
+      }
     }
 
-    const debitCards = cards.filter(
-      (card) => card.type === 'DEBIT'
-    );
+    const cardsResult = await cardService.getUserCards(userUuid);
+    if (!cardsResult.success) return 0;
+    const cards = cardsResult.data;
 
+    const debitCards = cards.filter((card) => card.type === 'DEBIT');
     if (debitCards.length === 0) return 0;
 
     const reports = await Promise.allSettled(
@@ -85,10 +87,10 @@ async function getDebitPurchaseCount(userUuid, externalCards = null) {
       .flatMap((r) => r.value.data.transactions || []);
 
     const count = allTransactions.filter((tx) => tx.isExpense || PURCHASE_TYPES.has(tx.type)).length;
-    console.log(`[cardService] Cálculado purchaseCount: ${count} para usuario ${userUuid}`);
+    console.log(`[cardService] Calculated purchaseCount: ${count} for user ${userUuid}`);
     return count;
   } catch (error) {
-    console.error('[cardService] Error en getDebitPurchaseCount:', error);
+    console.error('[cardService] Error in getDebitPurchaseCount:', error);
     return 0;
   }
 }
@@ -96,7 +98,6 @@ async function getDebitPurchaseCount(userUuid, externalCards = null) {
 export { getDebitPurchaseCount };
 
 export const cardService = {
-
   getUserCards: async (userUuid) => {
     try {
       if (!userUuid) throw new Error('User UUID es requerido');
@@ -151,7 +152,9 @@ export const cardService = {
   applyCardFunds: async ({ cardId, cardType, amount, merchant }) => {
     try {
       if (!cardId) throw new Error('Card ID es requerido');
-      if (!amount || Number(amount) <= 0) throw new Error('El monto debe ser mayor a cero');
+      if (!amount || Number(amount) !== CARD_AMOUNT) {
+        throw new Error(`El monto debe ser exactamente de ${CARD_AMOUNT.toFixed(2)} US$`);
+      }
 
       const normalizedType = String(cardType || 'DEBIT').toUpperCase();
       const endpoint = CREDIT_CARD_TYPES.has(normalizedType)

@@ -13,6 +13,8 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Loader2, Lock, PlusCircle, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
+const CARD_AMOUNT = 1000;
+
 export default function CardFundsDialog({ card, open, onClose, onSuccess }) {
   const [amount, setAmount] = useState('');
   const [merchant, setMerchant] = useState('');
@@ -30,15 +32,31 @@ export default function CardFundsDialog({ card, open, onClose, onSuccess }) {
   const actionLabel = isCreditCard ? 'Pagar tarjeta' : 'Recargar tarjeta';
   const helperLabel = isCreditCard ? 'Pago de tarjeta' : 'Recarga de tarjeta';
 
+  const handleAmountChange = (event) => {
+    const digitsOnly = event.target.value.replace(/\D/g, '');
+
+    if (digitsOnly.length > 4) {
+      toast.error('El monto no puede tener más de 4 dígitos');
+    }
+
+    setAmount(digitsOnly.slice(0, 4));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!card) return;
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount !== CARD_AMOUNT) {
+      toast.error(`El monto debe ser exactamente de ${CARD_AMOUNT.toFixed(2)} US$`);
+      return;
+    }
 
     setSubmitting(true);
     const result = await cardService.applyCardFunds({
       cardId: card.uuid || card.id,
       cardType: card.type,
-      amount,
+      amount: numericAmount,
       merchant,
     });
     setSubmitting(false);
@@ -57,7 +75,9 @@ export default function CardFundsDialog({ card, open, onClose, onSuccess }) {
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{actionLabel} •••• {card?.last4}</DialogTitle>
+          <DialogTitle>
+            {actionLabel} •••• {card?.last4}
+          </DialogTitle>
           <DialogDescription>
             {isCreditCard
               ? 'Aplica un pago a esta tarjeta de crédito y actualiza el saldo disponible.'
@@ -69,23 +89,24 @@ export default function CardFundsDialog({ card, open, onClose, onSuccess }) {
           <FieldGroup>
             <div className="rounded-lg bg-muted p-4 text-center">
               <p className="text-xs text-muted-foreground">Saldo actual</p>
-              <p className="text-2xl font-bold">
-                {Number(card?.balance || 0).toFixed(2)} US$
-              </p>
+              <p className="text-2xl font-bold">{Number(card?.balance || 0).toFixed(2)} US$</p>
             </div>
 
             <Field>
               <FieldLabel htmlFor="card-amount">Monto</FieldLabel>
               <Input
                 id="card-amount"
-                type="number"
-                min="1"
-                step="0.01"
-                placeholder="100.00"
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="1000"
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
+                onChange={handleAmountChange}
                 required
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                El monto permitido es de {CARD_AMOUNT.toFixed(2)} US$.
+              </p>
             </Field>
 
             <Field>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { cardService, getDebitPurchaseCount } from '@/services/cardService';
+import { cn } from '@/lib/utils';
+import { cardService } from '@/services/cardService';
 import {
   Card,
   CardContent,
@@ -17,6 +18,14 @@ import BankCard from '@/components/cards/BankCard';
 import CardFundsDialog from '@/components/cards/CardFundsDialog';
 import ActivationProgress from '@/components/cards/ActivationProgress';
 
+function getCardFrameClass(card, isCreditLocked) {
+  if (isCreditLocked) {
+    return 'border-rose-200/80 bg-white shadow-rose-100/40 dark:border-rose-900/50 dark:bg-slate-950';
+  }
+
+  return 'border-slate-200/80 bg-white shadow-slate-100/50 dark:border-slate-800 dark:bg-slate-950';
+}
+
 export default function CardsPage() {
   const user = useAuthStore((s) => s.user);
   const [cards, setCards] = useState([]);
@@ -30,22 +39,28 @@ export default function CardsPage() {
     try {
       setLoading(true);
       const result = await cardService.getUserCards(user.uuid);
-        if (result.success) {
-          const activeCards = result.data
-            .filter((card) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(card.status) || !card.status)
-            .map((card) => ({
-              ...card,
+
+      if (result.success) {
+        const activeCards = result.data
+          .filter((card) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(card.status) || !card.status)
+          .map((card) => ({
+            ...card,
             holder: `${user.name || ''} ${user.lastName || ''}`.trim() || card.holderName,
             last4: (card.cardNumber || '').slice(-4),
-              number: card.cardNumber || '****',
-              expiry: card.expiryDate,
-            }));
-          setCards(activeCards);
-          const count = await getDebitPurchaseCount(user.uuid, activeCards);
-          setPurchaseCount(count);
-        } else {
-          toast.error(result.message);
-        }
+            number: card.cardNumber || '****',
+            expiry: card.expiryDate,
+          }));
+
+        setCards(activeCards);
+
+        const count = activeCards
+          .filter((card) => card.type === 'DEBIT')
+          .reduce((sum, card) => sum + Number(card.purchaseCount || 0), 0);
+
+        setPurchaseCount(count);
+      } else {
+        toast.error(result.message);
+      }
     } catch (error) {
       console.error('Error fetching cards:', error);
       toast.error('No se pudieron cargar tus tarjetas');
@@ -60,7 +75,6 @@ export default function CardsPage() {
 
   return (
     <div className="space-y-8 pb-10">
-
       <div className="relative overflow-hidden rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-mesh-pattern opacity-10" />
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
@@ -86,12 +100,21 @@ export default function CardsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => {
-            const isCreditLocked = card.type === 'CREDIT' && purchaseCount < 10;
-            const isPending = isCreditLocked || card.status === 'PENDING';
+            const creditReady = purchaseCount >= 10;
+            const isCreditLocked = card.type === 'CREDIT' && !creditReady;
+            const isPending = card.type === 'CREDIT'
+              ? !creditReady && card.status === 'PENDING'
+              : card.status === 'PENDING';
             const remaining = Math.max(10 - purchaseCount, 0);
 
             return (
-              <Card key={card.uuid || card.id}>
+              <Card
+                key={card.uuid || card.id}
+                className={cn(
+                  'overflow-hidden border transition-all duration-300',
+                  getCardFrameClass(card, isCreditLocked)
+                )}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-base">
@@ -104,18 +127,16 @@ export default function CardsPage() {
                         Inactiva
                       </Badge>
                     ) : (
-                      <Badge variant={card.status === 'ACTIVE' || card.status === 'ACTIVATED' ? 'default' : 'secondary'}>
-                        {card.status === 'ACTIVE' || card.status === 'ACTIVATED' ? 'Activa' : card.status}
-                      </Badge>
+                      <Badge variant="default">Activa</Badge>
                     )}
                   </div>
                   <CardDescription>•••• {card.last4}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+
+                <CardContent className="space-y-4 px-3 pb-4">
                   <BankCard
                     card={card}
                     onSelect={isPending ? null : setSelectedCard}
-                    purchaseCount={purchaseCount}
                     locked={isCreditLocked}
                   />
 
@@ -128,7 +149,7 @@ export default function CardsPage() {
                         </p>
                       </div>
                       <ActivationProgress count={purchaseCount} />
-                      <p className="text-[10px] text-red-600/70 dark:text-red-400/50 leading-relaxed">
+                      <p className="text-[10px] leading-relaxed text-red-600/70 dark:text-red-400/50">
                         Realiza {remaining} compra{remaining !== 1 ? 's' : ''} más con tu tarjeta de débito para desbloquear esta tarjeta de crédito.
                       </p>
                     </div>

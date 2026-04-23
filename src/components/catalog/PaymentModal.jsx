@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
-import { cardService, getDebitPurchaseCount } from '@/services/cardService';
+import { cardService } from '@/services/cardService';
 import { paymentService } from '@/services/paymentService';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,7 +38,9 @@ export default function PaymentModal({ service, open, onClose }) {
             (c) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(c.status) || !c.status
           );
           setCards(filteredCards);
-          const count = await getDebitPurchaseCount(user.uuid, filteredCards);
+          const count = filteredCards
+            .filter((card) => card.type === 'DEBIT')
+            .reduce((sum, card) => sum + Number(card.purchaseCount || 0), 0);
           setPurchaseCount(count);
         }
       } catch (err) {
@@ -176,7 +178,6 @@ export default function PaymentModal({ service, open, onClose }) {
                       (() => {
                         const isCreditLocked = card.type === 'CREDIT' && purchaseCount < 10;
                         const isDisabled = card.status === 'PENDING' || isCreditLocked;
-                        const remaining = Math.max(10 - purchaseCount, 0);
 
                         return (
                       <button

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
-import { cardService, getDebitPurchaseCount } from '@/services/cardService';
+import { cardService } from '@/services/cardService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,6 +61,11 @@ export default function DashboardPage() {
         (card) => ['ACTIVATED', 'ACTIVE', 'PENDING'].includes(card.status) || !card.status
       );
       setCards(activeCards);
+      setPurchaseCount(
+        activeCards
+          .filter((card) => card.type === 'DEBIT')
+          .reduce((sum, card) => sum + Number(card.purchaseCount || 0), 0)
+      );
 
       const reports = await Promise.all(
         activeCards.map((card) => cardService.getCardReport(card.uuid || card.id))
@@ -99,27 +104,6 @@ export default function DashboardPage() {
 
     fetchData();
   }, [user?.uuid]);
-
-  useEffect(() => {
-    if (!user?.uuid) return;
-
-    if (!hasCreditCard) {
-      setPurchaseCount(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    getDebitPurchaseCount(user.uuid, cards).then((count) => {
-      if (!cancelled) {
-        setPurchaseCount(count);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [hasCreditCard, cards, user?.uuid]);
 
   const totalBalance = useMemo(
     () => cards.reduce((sum, card) => sum + parseFloat(card.balance || 0), 0),
