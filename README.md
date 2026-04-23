@@ -1,130 +1,70 @@
-# 🏦 Digital Bank Frontend - Premium Interface
+# Digital Bank Frontend
 
-¡Bienvenido al núcleo visual de la banca del futuro! Este proyecto es una interfaz de banca digital de alto rendimiento, diseñada con una estética **Premium Dark Mode**, enfocada en la experiencia de usuario (UX) y la eficiencia técnica.
+Interfaz web de banca digital construida con React y Vite, pensada para mostrar tarjetas, catalogo de servicios, pagos, dashboard y autenticacion en una experiencia moderna y responsiva.
 
----
+## Que hace esta aplicacion
 
-##  Análisis del Estado Actual
+- Muestra tarjetas de debito y credito con estado, saldo y reverso interactivo.
+- Permite activar el flujo de credito cuando se cumplen las 10 compras con debito.
+- Consume el catalogo de servicios para pagos desde el frontend.
+- Dispara pagos con seguimiento por `traceId` y consulta de estado.
+- Presenta dashboard, historial y modales de operacion con una interfaz premium.
 
-El proyecto se encuentra en una fase avanzada de diseño y prototipado funcional:
+## Modulos principales
 
-- **Autenticación (Auth)**: Flujos de Login y Registro totalmente maquetados con validación de estados.
-- **Dashboard Principal**: Resumen financiero que incluye saldo total, gestión de tarjetas y estadísticas en tiempo real.
-- **Visualización de Datos**: Integración de gráficos de área (`Recharts`) para el seguimiento de ingresos y gastos.
-- **Gestión de Tarjetas**: Interfaz intuitiva para visualizar múltiples productos bancarios (Débito/Crédito) y sus estados.
-- **Catálogo de Servicios**: El catálogo se consume desde el servicio de tarjetas mediante `GET /catalog`.
-- **Mocking System**: Actualmente el proyecto utiliza un motor de datos de prueba (`mockData.js`) que permite navegar y testear toda la interfaz sin necesidad de un backend activo, acelerando el desarrollo del frontend.
+- `src/pages/DashboardPage.jsx`: resumen financiero y tarjetas principales.
+- `src/pages/CardsPage.jsx`: vista de tarjetas, activacion y acciones de recarga o pago.
+- `src/pages/CatalogPage.jsx`: listado de servicios para pago.
+- `src/components/catalog/PaymentModal.jsx`: flujo de pago con seguimiento de estado.
+- `src/components/cards/BankCard.jsx`: tarjeta bancaria con volteo y vista detallada.
+- `src/components/cards/CardFundsDialog.jsx`: modal para recargar o pagar tarjeta.
 
----
+## Servicios consumidos
 
-## 📸 Galería (Screenshots)
+- `VITE_CARD_SERVICE_URL`
+- `VITE_PAYMENT_SERVICE_URL`
+- `VITE_CATALOG_SERVICE_URL`
 
-A continuación, una vista previa de la interfaz actual:
+La capa de `src/services` centraliza el acceso a tarjetas, catalogo y pagos para evitar logica duplicada en las paginas.
 
-### Autenticación
-![Login](./public/img/login.png)
-![Registro](./public/img/register.png)
+## Stack tecnico
 
-### Dashboard y Gestión
-![Panel Principal](./public/img/panel.png)
-![Tarjetas](./public/img/tarjetas.png)
+- React 19
+- Vite
+- Tailwind CSS v4
+- Shadcn UI
+- Zustand
+- Recharts
+- Axios
+- Sonner
 
-### Servicios y Pagos
-![Catálogo de Servicios](./public/img/service.png)
+## Flujo funcional
 
----
+1. El usuario entra al dashboard y ve su resumen financiero.
+2. En tarjetas puede recargar debito o pagar credito.
+3. En catalogo selecciona un servicio y ejecuta el pago.
+4. El pago se rastrea con `traceId` hasta obtener estado final.
+5. La interfaz refresca los datos despues de cada operacion exitosa.
 
-##  Stack Tecnológico
+## Despliegue
 
-Hemos seleccionado las tecnologías más modernas y estables del mercado para garantizar escalabilidad:
+El frontend se compila y publica en AWS con Terraform, S3 y CloudFront.
 
-| Componente | Tecnología |
-| :--- | :--- |
-| **Framework** | [React 19](https://react.dev/) |
-| **Build Tool** | [Vite](https://vitejs.dev/) |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) |
-| **UI Components** | [Shadcn UI](https://ui.shadcn.com/) (Radix UI base) |
-| **Iconografía** | [Lucide React](https://lucide.dev/) |
-| **Estado** | [Zustand](https://zustand-demo.pmnd.rs/) |
-| **Gráficos** | [Recharts](https://recharts.org/) |
-| **Networking** | [Axios](https://axios-http.com/) |
-| **Feedback** | [Sonner](https://sonner.stevenly.me/) (Toasts) |
+```bash
+npm install
+npm run build
+powershell -ExecutionPolicy Bypass -File .\terraform\deploy.ps1
+```
 
----
+## Estructura resumida
 
-##  ¿Por qué elegimos Shadcn UI?
-
-A diferencia de otras librerías de componentes, **Shadcn UI** sigue una filosofía de "Componentes que tú posees".
-
-### Tabla Comparativa
-
-| Característica | Shadcn UI | Material UI (MUI) | Tailwind CSS (Puro) |
-| :--- | :--- | :--- | :--- |
-| **Control** | **Total**: El código está en tu carpeta `components/ui`. | **Limitado**: Dependes de la lógica interna de la librería. | **Absoluto**: Debes construirlo todo desde cero. |
-| **Estilos** | Basado en variables CSS y Tailwind (clases). | CSS-in-JS (Emotion) / System. | Solo utilidades Tailwind. |
-| **Peso** | Mínimo: Solo lo que instalas y usas. | Significativo debido al runtime de estilos. | Cero extra. |
-| **Personalización** | Muy Fácil: Es código estándar de React. | Compleja: Requiere entender el sistema de themes. | Manual: Requiere mucho tiempo de diseño. |
-| **Accesibilidad** | **Alta**: Construido sobre Radix UI Primitives. | Alta. | Manual (debes implementarla tú). |
-
-**Veredicto**: Elegimos Shadcn porque nos permite tener un control quirúrgico sobre el diseño sin sacrificar la velocidad de desarrollo, manteniendo un código limpio y accesible.
-
----
-
-##  Roadmap de Consumo de API (Axios)
-
-El frontend está preparado para transicionar de datos mock a datos reales mediante una capa de servicios centralizada con **Axios**. Se consumirán los siguientes endpoints:
-
-### Servicios de Backend
-
-1. **Auth Service** (`/api/auth`)
-    - `POST /login`: Inicio de sesión y obtención de JWT.
-    - `POST /register`: Registro de nuevos clientes.
-2. **Account Service** (`/api/accounts`)
-    - `GET /me/summary`: Datos globales del dashboard.
-    - `GET /me/cards`: Listado de tarjetas vinculadas.
-3. **Transaction Service** (`/api/transactions`)
-    - `GET /history`: Historial de operaciones con filtros.
-    - `POST /transfer`: Ejecución de transferencias.
-4. **Catalog Service** (`/catalog`)
-    - `GET /catalog`: Lista de convenios y proveedores para pagos.
-    - `POST /catalog/update`: Actualiza el CSV de catálogo en el servicio de tarjetas.
-
----
-
-##  Instalación y Desarrollo
-
-Sigue estos pasos para poner en marcha el proyecto localmente:
-
-1. **Clonar el repositorio**
-   ```bash
-   git clone <url-del-repositorio>
-   cd digital-bank-frontend
-   ```
-
-2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
-
-3. **Iniciar el servidor de desarrollo**
-   ```bash
-   npm run dev
-   ```
-
-4. **Construir para producción**
-   ```bash
-   npm run build
-   ```
-5. **Correr el script de despliegue**
-   ```bash
-   powershell -ExecutionPolicy Bypass -File "D:\digital-bank-frontend\terraform\deploy.ps1"
-   ```
----
-
-## 🔧 Resolución de Problemas (Troubleshooting)
-
-- **Error con Tailwind v4**: Asegúrate de tener Node.js 18 o superior. Si el autocompletado de clases no funciona, actualiza la extensión de Tailwind en VS Code.
-- **Problemas de Iconos**: Si un icono no se visualiza, verifica que esté importado correctamente desde `lucide-react`.
-- **Zustand Persistence**: Por defecto, la autenticación se resetea al recargar. Para persistirla, activaremos el middleware de `persist` en futuras versiones.
-
----
+```text
+digital-bank-frontend
+├── src
+│   ├── components
+│   ├── pages
+│   └── services
+├── public
+├── terraform
+└── README.md
+```
