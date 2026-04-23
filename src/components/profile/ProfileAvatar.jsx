@@ -21,8 +21,8 @@ export function ProfileAvatar({ user, profileData, uploading, onAvatarChange }) 
               {user?.name?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
-          
-          <button 
+
+          <button
             onClick={handleAvatarClick}
             disabled={uploading}
             className={cn(
@@ -32,11 +32,11 @@ export function ProfileAvatar({ user, profileData, uploading, onAvatarChange }) 
           >
             {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
           </button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            accept="image/*" 
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
             onChange={onAvatarChange}
           />
         </div>

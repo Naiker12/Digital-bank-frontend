@@ -1,8 +1,6 @@
 resource "random_id" "bucket_suffix" {
   byte_length = 4
 }
-
-# S3 Bucket for Static Website
 resource "aws_s3_bucket" "frontend" {
   bucket        = "${var.bucket_name}-${random_id.bucket_suffix.hex}"
   force_destroy = true
@@ -21,8 +19,6 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
-
-# CloudFront Origin Access Control
 resource "aws_cloudfront_origin_access_control" "default" {
   name                              = "s3-oac-${var.bucket_name}"
   description                       = "OAC for ${var.bucket_name}"
@@ -30,8 +26,6 @@ resource "aws_cloudfront_origin_access_control" "default" {
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
-
-# CloudFront Distribution
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
     domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
@@ -61,8 +55,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     default_ttl            = 3600
     max_ttl                = 86400
   }
-
-  # SPA error handling: redirect 403 and 404 to index.html
   custom_error_response {
     error_code            = 403
     response_code         = 200
@@ -94,8 +86,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     Environment = var.environment
   }
 }
-
-# S3 Bucket Policy to allow CloudFront OAC
 resource "aws_s3_bucket_policy" "frontend_policy" {
   bucket = aws_s3_bucket.frontend.id
   policy = jsonencode({

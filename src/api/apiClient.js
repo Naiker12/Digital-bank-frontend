@@ -1,6 +1,4 @@
 import axios from 'axios';
-
-// Función para crear una instancia de axios con el interceptor de JWT
 const createInstance = (baseURL) => {
   const instance = axios.create({
     baseURL,
@@ -8,8 +6,6 @@ const createInstance = (baseURL) => {
       'Content-Type': 'application/json',
     },
   });
-
-  // Interceptor para incluir el token JWT en las peticiones
   instance.interceptors.request.use(
     (config) => {
       const authData = localStorage.getItem('digital-bank-auth');
@@ -32,12 +28,8 @@ const createInstance = (baseURL) => {
 
   return instance;
 };
-
-// Instancias para los diferentes microservicios (Configurados vía Variables de Entorno)
 export const userApi = createInstance(import.meta.env.VITE_USER_SERVICE_URL);
 export const cardApi = createInstance(import.meta.env.VITE_CARD_SERVICE_URL);
 export const paymentApi = createInstance(import.meta.env.VITE_PAYMENT_SERVICE_URL);
 export const catalogApi = createInstance(import.meta.env.VITE_CATALOG_SERVICE_URL);
-
-// Exportación por defecto (User Service por compatibilidad)
 export default userApi;

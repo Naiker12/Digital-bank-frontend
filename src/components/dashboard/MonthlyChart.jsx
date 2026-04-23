@@ -12,10 +12,6 @@ import {
 
 const CURRENT_YEAR = 2026;
 
-/**
- * Gráfica de área que muestra el flujo financiero mensual
- * (ingresos vs gastos) del año actual.
- */
 export default function MonthlyChart({ data }) {
   return (
     <Card className="min-w-0 overflow-hidden border-none shadow-sm lg:col-span-4">

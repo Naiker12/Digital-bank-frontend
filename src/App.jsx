@@ -15,7 +15,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Públicas — Protegidas por GuestGuard (si ya estás logueado, vas al dashboard) */}
+
         <Route
           path="/login"
           element={
@@ -33,7 +33,6 @@ export default function App() {
           }
         />
 
-        {/* Privadas — Protegidas por AuthGuard e integradas en el Layout */}
         <Route
           element={
             <AuthGuard>
@@ -48,7 +47,6 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
-        {/* Ruta por defecto */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <Toaster position="top-right" richColors />

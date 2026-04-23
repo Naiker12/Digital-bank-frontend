@@ -20,11 +20,11 @@ export function ProfileForm({ profileData, form, setForm, onSubmit, updating }) 
               </Label>
               <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <Input 
-                        id="name" 
-                        value={profileData?.name || ''} 
-                        disabled 
-                        className="pl-10 h-11 rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 cursor-not-allowed opacity-70" 
+                      <Input
+                        id="name"
+                        value={profileData?.name || ''}
+                        disabled
+                        className="pl-10 h-11 rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 cursor-not-allowed opacity-70"
                       />
               </div>
             </div>
@@ -34,11 +34,11 @@ export function ProfileForm({ profileData, form, setForm, onSubmit, updating }) 
               </Label>
               <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <Input 
-                        id="lastName" 
-                        value={profileData?.lastName || ''} 
-                        disabled 
-                        className="pl-10 h-11 rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 cursor-not-allowed opacity-70" 
+                      <Input
+                        id="lastName"
+                        value={profileData?.lastName || ''}
+                        disabled
+                        className="pl-10 h-11 rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 cursor-not-allowed opacity-70"
                       />
               </div>
             </div>
@@ -50,11 +50,11 @@ export function ProfileForm({ profileData, form, setForm, onSubmit, updating }) 
             </Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input 
-                id="email" 
-                value={profileData?.email || ''} 
-                disabled 
-                className="pl-10 h-12 rounded-xl bg-muted/50 border-none cursor-not-allowed" 
+              <Input
+                id="email"
+                value={profileData?.email || ''}
+                disabled
+                className="pl-10 h-12 rounded-xl bg-muted/50 border-none cursor-not-allowed"
               />
             </div>
           </div>
@@ -66,12 +66,12 @@ export function ProfileForm({ profileData, form, setForm, onSubmit, updating }) 
               </Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 h-4 w-4 text-primary/40" />
-                      <Input 
-                        id="phone" 
-                        placeholder="+51 987 654 321" 
+                      <Input
+                        id="phone"
+                        placeholder="+51 987 654 321"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="pl-10 h-11 rounded-lg border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all shadow-none" 
+                        className="pl-10 h-11 rounded-lg border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all shadow-none"
                       />
                     </div>
             </div>
@@ -81,20 +81,20 @@ export function ProfileForm({ profileData, form, setForm, onSubmit, updating }) 
               </Label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-3 h-4 w-4 text-primary/40" />
-                      <Input 
-                        id="address" 
-                        placeholder="Av. Las Camelias 123, San Isidro" 
+                      <Input
+                        id="address"
+                        placeholder="Av. Las Camelias 123, San Isidro"
                         value={form.address}
                         onChange={(e) => setForm({ ...form, address: e.target.value })}
-                        className="pl-10 h-11 rounded-lg border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all shadow-none" 
+                        className="pl-10 h-11 rounded-lg border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all shadow-none"
                       />
                     </div>
             </div>
           </div>
 
           <div className="flex justify-end pt-4">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={updating}
                     className="rounded-lg px-8 h-12 font-bold uppercase tracking-widest transition-all hover:opacity-90 shadow-none"
                   >

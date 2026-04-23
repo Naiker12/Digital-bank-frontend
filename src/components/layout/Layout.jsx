@@ -29,17 +29,16 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
-      {/* ─── SIDEBAR ─────────────────────────────────── */}
+
       <AppSidebar />
 
-      {/* ─── MAIN CONTENT AREA ───────────────────────── */}
       <SidebarInset>
-        {/* Header con navegación secundaria y Breadcrumbs */}
+
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-3 sm:px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            
+
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
@@ -54,7 +53,6 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Área de contenido principal */}
         <div className="flex flex-1 flex-col gap-4 px-3 pb-4 pt-0 sm:px-4">
           <div className="mx-auto w-full max-w-screen-2xl py-4 sm:py-6">
             <Outlet />

@@ -9,12 +9,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { 
-  Calendar, 
-  CreditCard, 
-  Hash, 
-  Receipt, 
-  ArrowUpRight, 
+import {
+  Calendar,
+  CreditCard,
+  Hash,
+  Receipt,
+  ArrowUpRight,
   ArrowDownRight,
   Clock
 } from 'lucide-react';
@@ -47,7 +47,7 @@ export default function TransactionDetailModal({ transaction, open, onClose }) {
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Monto Principal */}
+
           <div className="text-center pb-2">
             <p className={cn(
               'text-4xl font-black tracking-tighter',
@@ -110,7 +110,7 @@ export default function TransactionDetailModal({ transaction, open, onClose }) {
         </div>
 
         <DialogFooter>
-          <Button 
+          <Button
             className="w-full rounded-2xl py-6 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
             onClick={onClose}
           >

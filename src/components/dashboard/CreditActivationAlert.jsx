@@ -2,10 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShieldOff } from 'lucide-react';
 
-/**
- * Alerta visual que indica al usuario que su tarjeta de crédito está
- * pendiente de activación y muestra el progreso actual de compras con débito.
- */
 export default function CreditActivationAlert({ purchaseCount }) {
   const remaining = 10 - purchaseCount;
   const progress = Math.min((purchaseCount / 10) * 100, 100);

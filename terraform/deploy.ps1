@@ -7,8 +7,6 @@ $distIndex = Join-Path $distPath "index.html"
 Write-Host "----------------------------------------"
 Write-Host "Starting Deployment Process..."
 Write-Host "----------------------------------------"
-
-# 1. Prerequisites Check
 if (!(Get-Command terraform -ErrorAction SilentlyContinue)) {
     Write-Error "Error: terraform is not installed or not in PATH."
 }
@@ -16,8 +14,6 @@ if (!(Get-Command terraform -ErrorAction SilentlyContinue)) {
 if (!(Get-Command aws -ErrorAction SilentlyContinue)) {
     Write-Error "Error: aws-cli is not installed or not in PATH."
 }
-
-# 2. Check for Build Artifacts
 Write-Host "Checking for build artifacts..."
 if (!(Test-Path $distIndex)) {
     Write-Host "Build not found. Building React app..."
@@ -28,8 +24,6 @@ if (!(Test-Path $distIndex)) {
 } else {
     Write-Host "Found existing build in dist/. Skipping build step."
 }
-
-# 3. Terraform Info
 Write-Host "Extracting infrastructure details from Terraform..."
 Push-Location $scriptRoot
 $BUCKET_NAME = terraform output -raw s3_bucket_name
@@ -43,12 +37,8 @@ if ([string]::IsNullOrEmpty($BUCKET_NAME) -or [string]::IsNullOrEmpty($DISTRIBUT
 
 Write-Host "Target S3 Bucket: $BUCKET_NAME"
 Write-Host "CloudFront ID: $DISTRIBUTION_ID"
-
-# 4. Sync S3
 Write-Host "Uploading to S3..."
 aws s3 sync $distPath "s3://$BUCKET_NAME" --delete
-
-# 5. Invalidate CloudFront
 Write-Host "Invalidating CloudFront cache..."
 aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*" | Out-Null
 

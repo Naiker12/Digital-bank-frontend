@@ -11,17 +11,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-/**
- * Tabla responsiva del catálogo de servicios.
- * Vista móvil: tarjetas apiladas.  Vista desktop: tabla formal.
- */
 export default function ServiceTable({ items, emptyCount, onSelect }) {
   const isEmpty = emptyCount === 0;
 
   return (
     <Card className="border-none shadow-sm overflow-hidden w-full max-w-full bg-transparent md:bg-card">
       <CardContent className="min-w-0 overflow-x-hidden p-0">
-        {/* Vista Móvil */}
+
         <div className="grid grid-cols-1 gap-4 overflow-x-hidden px-2 py-4 sm:grid-cols-2 md:hidden">
           {items.map((s) => (
             <div key={s.id} className="flex min-w-0 flex-col gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm transition-all hover:border-primary/30 sm:p-5">
@@ -71,7 +67,6 @@ export default function ServiceTable({ items, emptyCount, onSelect }) {
           )}
         </div>
 
-        {/* Vista Desktop */}
         <div className="hidden md:block overflow-x-auto w-full">
           <Table className="min-w-[800px]">
             <TableHeader className="bg-muted/30">

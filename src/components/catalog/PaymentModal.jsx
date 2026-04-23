@@ -16,10 +16,6 @@ import { toast } from 'sonner';
 
 import PaymentTracker from '@/components/catalog/PaymentTracker';
 
-/**
- * Modal completo del flujo de pago: selección de tarjeta,
- * confirmación de monto y seguimiento asíncrono del estado.
- */
 export default function PaymentModal({ service, open, onClose }) {
   const user = useAuthStore((s) => s.user);
   const [cards, setCards] = useState([]);
@@ -31,7 +27,6 @@ export default function PaymentModal({ service, open, onClose }) {
   const [purchaseCount, setPurchaseCount] = useState(0);
   const pollingRef = useRef(null);
 
-  /* ── Cargar tarjetas y progreso ──── */
   useEffect(() => {
     if (!open || !user?.uuid) return;
     const loadAppData = async () => {
@@ -55,7 +50,6 @@ export default function PaymentModal({ service, open, onClose }) {
     loadAppData();
   }, [open, user?.uuid]);
 
-  /* ── Polling del estado ──── */
   useEffect(() => {
     if (!traceId) return;
     const pollStatus = async () => {
@@ -139,7 +133,7 @@ export default function PaymentModal({ service, open, onClose }) {
             </DialogHeader>
 
             <div className="space-y-5 sm:space-y-6">
-              {/* Resumen del monto */}
+
               <div className="rounded-lg bg-muted p-4 text-center sm:p-6">
                 <p className="text-xs text-muted-foreground mb-1">Total a pagar</p>
                 <p className="text-3xl font-bold leading-none sm:text-4xl">
@@ -150,7 +144,6 @@ export default function PaymentModal({ service, open, onClose }) {
                 </p>
               </div>
 
-              {/* Selector de tarjeta */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -236,7 +229,6 @@ export default function PaymentModal({ service, open, onClose }) {
                 )}
               </div>
 
-              {/* Botón de confirmación */}
               <div className="space-y-4">
                 <Button
                   className="w-full rounded-xl py-5 text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/20 sm:py-6"

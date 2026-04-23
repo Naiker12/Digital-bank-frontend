@@ -1,7 +1,4 @@
-/**
- * Barra de progreso que muestra el avance hacia las 10 compras
- * con débito requeridas para activar una tarjeta de crédito.
- */
+
 export default function ActivationProgress({ count }) {
   const progress = Math.min((count / 10) * 100, 100);
 

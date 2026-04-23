@@ -2,9 +2,7 @@ import { userApi } from '@/api/apiClient';
 import { parseResponse, handleError } from './serviceUtils';
 
 export const authService = {
-  /**
-   * Autentica al usuario y obtiene el token JWT
-   */
+
   login: async (email, password) => {
     try {
       const response = await userApi.post('/users/login', { email, password });
@@ -19,9 +17,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Registra un nuevo usuario en el sistema
-   */
   register: async (userData) => {
     try {
       const response = await userApi.post('/users/register', userData);
@@ -36,9 +31,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Obtiene el perfil completo del usuario
-   */
   getProfile: async (userId) => {
     try {
       const response = await userApi.get(`/users/profile/${userId}`);

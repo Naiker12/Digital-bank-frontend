@@ -51,8 +51,6 @@ const SidebarProvider = React.forwardRef((
 ) => {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
-
-  // Estado interno para cuando no se pasa openProp
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
   const setOpen = React.useCallback((value) => {
@@ -62,19 +60,13 @@ const SidebarProvider = React.forwardRef((
     } else {
       _setOpen(openState)
     }
-
-    // Guardar en cookie para persistencia (opcional)
     document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
   }, [setOpenProp, open])
-
-  // Helper para alternar sidebar
   const toggleSidebar = React.useCallback(() => {
     return isMobile
       ? setOpenMobile((open) => !open)
       : setOpen((open) => !open)
   }, [isMobile, setOpen, setOpenMobile])
-
-  // Atajo de teclado (Ctrl+B)
   React.useEffect(() => {
     const handleKeyDown = (event) => {
       if (
@@ -89,8 +81,6 @@ const SidebarProvider = React.forwardRef((
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [toggleSidebar])
-
-  // Estado del sidebar (expanded/collapsed)
   const state = open ? "expanded" : "collapsed"
 
   const contextValue = React.useMemo(() => ({
@@ -179,7 +169,7 @@ const Sidebar = React.forwardRef((
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}
       data-side={side}>
-      {/* El espacio que ocupa en el layout */}
+
       <div
         className={cn(
           "duration-200 relative h-svh w-(--sidebar-width) bg-transparent transition-[width] ease-linear",
@@ -195,7 +185,6 @@ const Sidebar = React.forwardRef((
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-          // Variantes
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_calc(var(--spacing)*4)_+2px)]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) border-r group-data-[side=right]:border-l",

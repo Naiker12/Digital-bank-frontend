@@ -25,8 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
-// Datos de navegación
 const navItems = [
   {
     title: "Inicio",
@@ -131,7 +129,7 @@ export function AppSidebar({ ...props }) {
                     Perfil
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                   onClick={logout}
                 >

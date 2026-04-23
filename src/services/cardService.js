@@ -6,9 +6,6 @@ const DEBIT_CARD_TYPES = new Set(['DEBIT', 'DEBITO', 'DÉBITO', 'DÉBIT']);
 const PURCHASE_TYPES = new Set(['PURCHASE', 'COMPRA', 'EXPENSE', 'PAGO_SERVICIO', 'TRANSACCION', 'SALE', 'TRANSACTION']);
 const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-/**
- * Normaliza los datos de la tarjeta para la UI
- */
 export function normalizeCard(card) {
   const id = card.id || card.uuid || card.ID;
   const rawType = String(card.type || 'DEBIT').toUpperCase();
@@ -60,15 +57,10 @@ export function normalizeTransaction(transaction, cardId) {
   };
 }
 
-/**
- * Calcula el número total de compras (PURCHASE) realizadas con tarjetas
- * de débito del usuario. Se usa para mostrar el progreso X/10 de
- * activación de la tarjeta de crédito.
- */
 async function getDebitPurchaseCount(userUuid, externalCards = null) {
   try {
     if (!userUuid) return 0;
-    
+
     let cards;
     if (externalCards) {
       cards = externalCards;
@@ -104,9 +96,7 @@ async function getDebitPurchaseCount(userUuid, externalCards = null) {
 export { getDebitPurchaseCount };
 
 export const cardService = {
-  /**
-   * Obtiene la billetera del usuario (todas sus tarjetas)
-   */
+
   getUserCards: async (userUuid) => {
     try {
       if (!userUuid) throw new Error('User UUID es requerido');
@@ -127,9 +117,6 @@ export const cardService = {
     }
   },
 
-  /**
-   * Obtiene el reporte de movimientos de una tarjeta.
-   */
   getCardReport: async (cardId) => {
     try {
       if (!cardId) throw new Error('Card ID es requerido');
@@ -161,9 +148,6 @@ export const cardService = {
     }
   },
 
-  /**
-   * Recarga una tarjeta débito o aplica pago a una tarjeta crédito.
-   */
   applyCardFunds: async ({ cardId, cardType, amount, merchant }) => {
     try {
       if (!cardId) throw new Error('Card ID es requerido');

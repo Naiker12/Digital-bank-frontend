@@ -1,10 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-/**
- * Grid de tarjetas de estadísticas reutilizables.
- * Cada stat es { title, value, icon, color, bg, desc? }.
- */
 export default function StatsGrid({ stats }) {
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

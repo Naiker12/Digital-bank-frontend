@@ -22,7 +22,6 @@ import {
   Hash,
 } from 'lucide-react';
 
-/* ── Componentes extraídos ──── */
 import StatsGrid from '@/components/transactions/StatsGrid';
 import TransactionTable from '@/components/transactions/TransactionTable';
 import TransactionFilters from '@/components/transactions/TransactionFilters';
@@ -39,7 +38,6 @@ export default function TransactionsPage() {
   const [selectedTx, setSelectedTx] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  /* ── Carga de datos ──── */
   useEffect(() => {
     if (!user?.uuid) return;
 
@@ -73,7 +71,6 @@ export default function TransactionsPage() {
     fetchAllTransactions();
   }, [user?.uuid]);
 
-  /* ── Cálculos derivados ──── */
   const totals = useMemo(() => {
     let totalExpenses = 0;
     let totalIncome = 0;
@@ -112,7 +109,6 @@ export default function TransactionsPage() {
     setModalOpen(true);
   };
 
-  /* ── Stats ──── */
   const statsCards = [
     {
       title: 'Total Gastado',
@@ -146,7 +142,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-8 pb-10">
-      {/* ── Header ─── */}
+
       <div className="relative overflow-hidden rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-mesh-pattern opacity-20" />
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
@@ -197,12 +193,11 @@ export default function TransactionsPage() {
             resultCount={filteredTransactions.length}
           />
 
-          <TransactionTable 
-            transactions={paginatedTransactions} 
+          <TransactionTable
+            transactions={paginatedTransactions}
             onSelectTransaction={handleSelectTransaction}
           />
 
-          {/* ── Paginación ─── */}
           {totalPages > 1 && (
             <div className="flex flex-col items-center gap-4 pt-6">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
@@ -214,12 +209,12 @@ export default function TransactionsPage() {
                     <PaginationPrevious
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       className={cn(
-                        'cursor-pointer rounded-xl border-none hover:bg-primary/10 transition-all', 
+                        'cursor-pointer rounded-xl border-none hover:bg-primary/10 transition-all',
                         currentPage === 1 && 'pointer-events-none opacity-20'
                       )}
                     />
                   </PaginationItem>
-                  
+
                   {Array.from({ length: totalPages }).map((_, i) => (
                     <PaginationItem key={i + 1} className="hidden sm:inline-block">
                       <PaginationLink
@@ -239,7 +234,7 @@ export default function TransactionsPage() {
                     <PaginationNext
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                       className={cn(
-                        'cursor-pointer rounded-xl border-none hover:bg-primary/10 transition-all', 
+                        'cursor-pointer rounded-xl border-none hover:bg-primary/10 transition-all',
                         currentPage === totalPages && 'pointer-events-none opacity-20'
                       )}
                     />

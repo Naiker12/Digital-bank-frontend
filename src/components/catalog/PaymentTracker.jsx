@@ -3,11 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 
-/**
- * Indicador de progreso visual para el flujo de pago asíncrono.
- * Muestra tres fases: Inicio → Procesando → Finalizado, con estados
- * de éxito y error.
- */
 export default function PaymentTracker({ status, error, service, onReset }) {
   const steps = [
     { id: 'INITIAL', label: 'Iniciando Pago', progress: 33 },

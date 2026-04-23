@@ -12,7 +12,6 @@ import {
   Loader2,
 } from 'lucide-react';
 
-/* ── Componentes extraídos ──── */
 import StatsGrid from '@/components/transactions/StatsGrid';
 import TransactionItem from '@/components/transactions/TransactionItem';
 import CreditActivationAlert from '@/components/dashboard/CreditActivationAlert';
@@ -41,7 +40,6 @@ export default function DashboardPage() {
   );
   const creditNeedsActivation = hasCreditCard && purchaseCount !== null && purchaseCount < 10;
 
-  /* ── Carga de datos ──── */
   useEffect(() => {
     if (!user?.uuid) return;
 
@@ -128,7 +126,6 @@ export default function DashboardPage() {
     [cards]
   );
 
-  /* ── Definición de stats ──── */
   const stats = [
     {
       title: 'Disponible',
@@ -166,7 +163,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 pb-10">
-      {/* ── Header ─── */}
+
       <div className="relative overflow-hidden rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-mesh-pattern opacity-20" />
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
@@ -208,7 +205,6 @@ export default function DashboardPage() {
           <div className="grid gap-6 lg:grid-cols-7">
             <MonthlyChart data={chartData} />
 
-            {/* ── Movimientos recientes ─── */}
             <Card className="border-none shadow-sm lg:col-span-3">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>

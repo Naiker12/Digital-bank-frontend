@@ -13,10 +13,6 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Loader2, Lock, PlusCircle, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
-/**
- * Diálogo reutilizable para recargar una tarjeta débito
- * o aplicar un pago a una tarjeta crédito.
- */
 export default function CardFundsDialog({ card, open, onClose, onSuccess }) {
   const [amount, setAmount] = useState('');
   const [merchant, setMerchant] = useState('');

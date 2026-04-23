@@ -11,7 +11,6 @@ export const useAuthStore = create(
       login: async (email, password) => {
         const result = await authService.login(email, password);
         if (result.success) {
-          // La respuesta de la Lambda puede usar distintos nombres de campo
           const data = result.data;
           const userData = {
             name: data.user?.name || data.name,
@@ -23,7 +22,6 @@ export const useAuthStore = create(
           set({ user: userData, isAuthenticated: true });
           return { success: true };
         }
-        // Limpiamos cualquier rastro de sesión si el login falla
         set({ user: null, isAuthenticated: false });
         return { success: false, message: result.message };
       },
@@ -31,8 +29,6 @@ export const useAuthStore = create(
       register: async (userData) => {
         const result = await authService.register(userData);
         if (result.success) {
-          // El registro del backend no retorna token, 
-          // así que marcamos como no autenticado para que inicie sesión manualmente
           set({ user: null, isAuthenticated: false });
           return { success: true, message: 'Registro exitoso. Por favor inicia sesión.' };
         }

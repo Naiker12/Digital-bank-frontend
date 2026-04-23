@@ -1,11 +1,6 @@
 import { cn } from '@/lib/utils';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
-/**
- * Fila individual para un movimiento financiero.
- * Se reutiliza tanto en el Dashboard (vista compacta) como
- * en la TransactionsPage (vista completa).
- */
 export default function TransactionItem({ transaction }) {
   return (
     <div className="group flex items-center justify-between rounded-xl p-2 transition-colors hover:bg-muted/50">

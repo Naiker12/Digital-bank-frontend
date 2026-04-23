@@ -11,9 +11,6 @@ const TYPE_FILTERS = [
   { value: 'PAYMENT_BALANCE', label: 'Pagos' },
 ];
 
-/**
- * Tabs de filtro por tipo de transacción con contador de resultados.
- */
 export default function TransactionFilters({ value, onChange, resultCount }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

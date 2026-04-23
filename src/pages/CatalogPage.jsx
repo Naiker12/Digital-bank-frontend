@@ -26,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-/* ── Componentes extraídos ──── */
 import ServiceTable from '@/components/catalog/ServiceTable';
 import PaymentModal from '@/components/catalog/PaymentModal';
 
@@ -40,7 +39,6 @@ export default function CatalogPage() {
   const [selected, setSelected] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  /* ── Carga del catálogo ──── */
   useEffect(() => {
     const fetchCatalog = async () => {
       setLoading(true);
@@ -56,7 +54,6 @@ export default function CatalogPage() {
     fetchCatalog();
   }, []);
 
-  /* ── Filtrado y paginación ──── */
   const categories = ['all', ...new Set(catalog.map((s) => s.categoria))];
 
   const filtered = catalog.filter((s) => {
@@ -85,7 +82,7 @@ export default function CatalogPage() {
 
   return (
     <div className="space-y-5 overflow-x-hidden pb-10 font-sans sm:space-y-6">
-      {/* ── Header ─── */}
+
       <div className="flex flex-col gap-1 px-2 sm:px-3 md:px-0">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">Servicios y Pagos</h1>
         <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
@@ -93,7 +90,6 @@ export default function CatalogPage() {
         </p>
       </div>
 
-      {/* ── Filtros ─── */}
       <div className="px-2 sm:px-3 md:px-0">
         <div className="rounded-2xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur-sm md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-0">
           <div className="space-y-3 md:hidden">
@@ -165,7 +161,6 @@ export default function CatalogPage() {
 
       <Separator className="opacity-50" />
 
-      {/* ── Contenido ─── */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -179,7 +174,6 @@ export default function CatalogPage() {
             onSelect={setSelected}
           />
 
-          {/* ── Paginación ─── */}
           {totalPages > 1 && (
             <div className="flex justify-center pt-2">
               <Pagination>
@@ -214,7 +208,6 @@ export default function CatalogPage() {
         </>
       )}
 
-      {/* ── Modal de pago ─── */}
       {selected && (
         <PaymentModal
           service={selected}

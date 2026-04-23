@@ -14,7 +14,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+
   const [form, setForm] = useState({
     address: '',
     phone: ''
@@ -36,7 +36,6 @@ export default function ProfilePage() {
           address: result.data.address || '',
           phone: result.data.phone || ''
         });
-        // Sincronizar avatarUrl si existe
         if (result.data.avatarUrl) {
           updateUser({ avatarUrl: result.data.avatarUrl });
         }
@@ -81,7 +80,7 @@ export default function ProfilePage() {
     reader.onload = async (event) => {
       const base64Image = event.target.result;
       const result = await userService.uploadAvatar(user.uuid, base64Image, file.type);
-      
+
       if (result.success) {
         toast.success('Avatar actualizado');
         updateUser({ avatarUrl: result.url });
@@ -106,26 +105,24 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row gap-8">
-        
-        {/* ─── Columna Izquierda: Avatar y Status ────────────────────────── */}
+
         <div className="w-full md:w-1/3 space-y-6">
-          <ProfileAvatar 
-            user={user} 
-            profileData={profileData} 
-            uploading={uploading} 
-            onAvatarChange={handleFileChange} 
+          <ProfileAvatar
+            user={user}
+            profileData={profileData}
+            uploading={uploading}
+            onAvatarChange={handleFileChange}
           />
           <ProfileStatusCards profileData={profileData} />
         </div>
 
-        {/* ─── Columna Derecha: Configuración ────────────────────────────── */}
         <div className="flex-1">
-          <ProfileForm 
-            profileData={profileData} 
-            form={form} 
-            setForm={setForm} 
-            onSubmit={handleUpdateProfile} 
-            updating={updating} 
+          <ProfileForm
+            profileData={profileData}
+            form={form}
+            setForm={setForm}
+            onSubmit={handleUpdateProfile}
+            updating={updating}
           />
         </div>
 

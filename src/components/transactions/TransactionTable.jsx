@@ -17,10 +17,6 @@ const TYPE_LABELS = {
   PAYMENT_BALANCE: 'Pago',
 };
 
-/**
- * Tabla responsiva de transacciones: tarjetas en móvil, tabla en desktop.
- * Muestra un estado vacío elegante cuando no hay datos.
- */
 export default function TransactionTable({ transactions, onSelectTransaction }) {
   if (transactions.length === 0) {
     return (
@@ -37,7 +33,7 @@ export default function TransactionTable({ transactions, onSelectTransaction }) 
   return (
     <Card className="border-none shadow-sm overflow-hidden bg-transparent md:bg-card">
       <CardContent className="p-0">
-        {/* Vista Móvil */}
+
         <div className="space-y-3 md:hidden p-4">
           {transactions.map((tx) => (
             <div
@@ -66,7 +62,6 @@ export default function TransactionTable({ transactions, onSelectTransaction }) 
           ))}
         </div>
 
-        {/* Vista Desktop */}
         <div className="hidden md:block overflow-x-auto">
           <Table className="min-w-[700px]">
             <TableHeader className="bg-muted/30">
@@ -80,8 +75,8 @@ export default function TransactionTable({ transactions, onSelectTransaction }) 
             </TableHeader>
             <TableBody>
               {transactions.map((tx) => (
-                <TableRow 
-                  key={tx.id} 
+                <TableRow
+                  key={tx.id}
                   onClick={() => onSelectTransaction?.(tx)}
                   className="group hover:bg-primary/[0.02] border-muted/20 cursor-pointer transition-colors"
                 >

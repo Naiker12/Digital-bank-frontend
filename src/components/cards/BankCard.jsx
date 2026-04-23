@@ -17,10 +17,6 @@ function getCardGradient(card, locked = false) {
   return CARD_GRADIENTS.DEBIT;
 }
 
-/**
- * Componente visual que renderiza el aspecto físico de una tarjeta bancaria.
- * Cambia de gradiente según tipo (DEBIT/CREDIT) y estado (PENDING).
- */
 export default function BankCard({ card, onSelect, purchaseCount = 0, locked = false }) {
   const isPending = card.type === 'CREDIT' && (card.status === 'PENDING' || locked);
 

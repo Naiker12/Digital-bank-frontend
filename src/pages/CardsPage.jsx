@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { CreditCard, Loader2, Lock, ShieldOff } from 'lucide-react';
 import { toast } from 'sonner';
 
-/* ── Componentes extraídos ──── */
 import BankCard from '@/components/cards/BankCard';
 import CardFundsDialog from '@/components/cards/CardFundsDialog';
 import ActivationProgress from '@/components/cards/ActivationProgress';
@@ -61,7 +60,7 @@ export default function CardsPage() {
 
   return (
     <div className="space-y-8 pb-10">
-      {/* ── Header ─── */}
+
       <div className="relative overflow-hidden rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-mesh-pattern opacity-10" />
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
@@ -80,7 +79,6 @@ export default function CardsPage() {
         </div>
       </div>
 
-      {/* ── Grid de tarjetas ─── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -154,7 +152,6 @@ export default function CardsPage() {
         </div>
       )}
 
-      {/* ── Diálogo de fondos ─── */}
       <CardFundsDialog
         card={selectedCard}
         open={!!selectedCard}
